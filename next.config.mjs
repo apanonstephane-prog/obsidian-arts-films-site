@@ -9,9 +9,6 @@ const nextConfig = {
       },
     ],
   },
-  experimental: {
-    optimizePackageImports: ["framer-motion"],
-  },
 };
 
 export default nextConfig;
