@@ -17,12 +17,11 @@ const audiences = [
     label: "Pour les artistes",
     headline: "Votre musique mérite une image à la hauteur.",
     description:
-      "Un clip raté, c'est une sortie gâchée. On crée du contenu visuel qui installe votre identité, booste vos streams et fait parler de vous — avant et après la sortie.",
+      "Un clip raté, c'est une sortie gâchée. On crée du contenu qui installe votre image, booste votre visibilité et fait parler de vous.",
     benefits: [
-      "Boostez votre crédibilité et votre image d'artiste",
-      "Préparez votre sortie avec un contenu qui percute",
-      "Créez du buzz et attirez de nouveaux fans",
-      "Formats optimisés Instagram, TikTok et YouTube",
+      "Image renforcée — crédibilité d'artiste instantanée",
+      "Sortie préparée — clip ou reel percutant dès le premier jour",
+      "Buzz garanti — contenu fait pour être partagé",
     ],
     cta: "Préparer ma sortie",
     accentColor: "text-obsidian-gold",
@@ -33,14 +32,13 @@ const audiences = [
   {
     id: "commerces",
     label: "Pour les commerces & fast-food",
-    headline: "Des vidéos qui font venir des clients chez vous.",
+    headline: "Des vidéos qui donnent faim et font venir du monde.",
     description:
-      "Une vidéo bien faite vaut mieux que dix posts photo. On crée du contenu visuel appétissant et professionnel qui donne envie — et qui convertit des vues en clients réels.",
+      "Une vidéo appétissante vaut mieux que cent posts photos. On crée des reels et promos qui convertissent des vues en clients qui poussent votre porte.",
     benefits: [
-      "Attirez de nouveaux clients avec du contenu accrocheur",
-      "Valorisez vos produits avec une mise en scène premium",
-      "Créez des vidéos qui donnent faim et donnent envie d'acheter",
-      "Adapté restaurants, fast-food, boutiques et commerces locaux",
+      "Plus de clients — du contenu qui attire et qui convertit",
+      "Produits mis en valeur — mise en scène premium, résultat pro",
+      "Reels réguliers — présence constante sur les réseaux",
     ],
     cta: "Attirer plus de clients",
     accentColor: "text-obsidian-silver",
@@ -53,12 +51,11 @@ const audiences = [
     label: "Pour les organisateurs d'événements",
     headline: "Remplissez votre salle avant le soir J.",
     description:
-      "Un teaser bien monté crée l'attente. On produit des teasers, after-movies et contenus promo qui vendent vos événements avant même qu'ils commencent.",
+      "Un teaser bien monté crée l'envie bien avant l'événement. On produit teasers, aftermovies et contenus promo qui vendent vos billets et construisent votre réputation.",
     benefits: [
-      "Vendez plus de billets grâce à des teasers impactants",
-      "Créez du hype sur les réseaux et faites parler de votre soirée",
-      "Teasez vos événements avec un montage cinématographique",
-      "After-movies qui fidélisent et construisent votre réputation",
+      "Plus de billets vendus — du hype bien avant la soirée",
+      "Teaser cinéma — l'impatience monte, l'événement se remplit",
+      "Aftermovie — fidélisez votre public pour la prochaine date",
     ],
     cta: "Remplir mon événement",
     accentColor: "text-obsidian-metal",

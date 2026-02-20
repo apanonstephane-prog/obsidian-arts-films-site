@@ -44,11 +44,11 @@ export function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
           >
-            OBSIDIAN transforme
+            Des vidéos cinéma
             <br />
-            <span className="text-gradient-gold">votre image</span>
+            <span className="text-gradient-gold">qui font parler</span>
             <br />
-            en machine à clients.
+            de vous.
           </motion.h1>
 
           {/* Subheading */}
@@ -58,8 +58,8 @@ export function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.5 }}
           >
-            Clips, vidéos promo et teasers qui attirent du public,
-            remplissent vos événements et font venir des clients.
+            Artistes, fast-food, organisateurs : clips, reels et teasers
+            pensés pour performer sur Instagram, TikTok et YouTube.
           </motion.p>
 
           {/* Audience CTAs */}

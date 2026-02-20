@@ -12,6 +12,76 @@ export const metadata: Metadata = {
     "Trois offres de production conçues pour différents niveaux d'ambition créative. Essentiel, Premium et Ultra — chacune pensée autour d'un type spécifique de client et de projet.",
 };
 
+/* ── Artist pricing — single locked prices ─────────────────── */
+const artistOffers = [
+  {
+    id: "essentiel",
+    name: "Essentiel",
+    price: "390 €",
+    featured: false,
+    badge: null as string | null,
+    priceColor: "text-obsidian-silver",
+    topLine: "from-transparent via-obsidian-silver/40 to-transparent",
+    markerColor: "text-obsidian-silver",
+    bg: "bg-obsidian-dark hover:bg-obsidian-charcoal",
+    included: [
+      "1 vidéo",
+      "8–12 plans visuels",
+      "Animation pro",
+      "1 format",
+      "1 révision",
+      "Livraison 5–7 jours",
+    ],
+    cta: "Démarrer",
+    ctaClass: "btn-outline",
+  },
+  {
+    id: "premium",
+    name: "Premium",
+    price: "790 €",
+    featured: true,
+    badge: "Le plus choisi",
+    priceColor: "text-obsidian-gold",
+    topLine: "from-transparent via-obsidian-gold to-transparent",
+    markerColor: "text-obsidian-gold",
+    bg: "bg-obsidian-charcoal",
+    included: [
+      "3 vidéos",
+      "15–20 plans premium",
+      "Animation avancée",
+      "Sound design pro",
+      "2 formats",
+      "2 révisions",
+      "Livraison 7–10 jours",
+    ],
+    cta: "Explorer Premium",
+    ctaClass: "btn-primary",
+  },
+  {
+    id: "ultra",
+    name: "Ultra",
+    price: "1 290 €",
+    featured: false,
+    badge: null as string | null,
+    priceColor: "text-obsidian-metal",
+    topLine: "from-transparent via-obsidian-metal/50 to-transparent",
+    markerColor: "text-obsidian-metal",
+    bg: "bg-obsidian-dark hover:bg-obsidian-charcoal",
+    included: [
+      "5 vidéos",
+      "Concept sur-mesure",
+      "25–30 plans premium",
+      "Animation cinéma",
+      "3 formats",
+      "3 révisions",
+      "Livraison 10–14 jours",
+      "Voix-off disponible",
+    ],
+    cta: "Commander Ultra",
+    ctaClass: "btn-outline",
+  },
+] as const;
+
 export default function PackagesPage() {
   return (
     <>
@@ -37,7 +107,7 @@ export default function PackagesPage() {
         </div>
       </section>
 
-      {/* Packages Grid */}
+      {/* Packages Grid — full studio offers */}
       <section className="pb-32 bg-obsidian-black">
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 border-t border-l border-obsidian-border">
@@ -146,7 +216,7 @@ export default function PackagesPage() {
         </div>
       </section>
 
-      {/* Artist Video Pricing */}
+      {/* Artist Video Pricing — single prices */}
       <section className="py-24 bg-obsidian-dark border-t border-obsidian-border">
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <FadeIn>
@@ -159,155 +229,87 @@ export default function PackagesPage() {
           </FadeIn>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 border-t border-l border-obsidian-border">
-            {/* ESSENTIEL */}
-            <FadeIn>
-              <div className="border-r border-b border-obsidian-border p-10 bg-obsidian-dark hover:bg-obsidian-charcoal transition-colors duration-300 flex flex-col h-full">
-                <h3 className="font-display text-3xl text-obsidian-white mb-2">Essentiel</h3>
-                <GoldLine className="w-8 mb-8 opacity-40" />
-
-                {/* Prices */}
-                <div className="space-y-0 border-t border-obsidian-border mb-8">
-                  {[["15s", "290\u00a0€"], ["30s", "490\u00a0€"], ["60s", "790\u00a0€"]].map(([dur, price]) => (
-                    <div key={dur} className="flex items-center justify-between py-3 border-b border-obsidian-border">
-                      <span className="text-obsidian-silver text-sm tracking-widest uppercase">{dur}</span>
-                      <span className="font-display text-xl text-obsidian-white">{price}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Inclus */}
-                <div className="flex-1">
-                  <h4 className="text-xs tracking-mega-wide uppercase text-obsidian-silver mb-4">Inclus</h4>
-                  <ul className="space-y-2.5">
-                    {[
-                      "1 vidéo",
-                      "8–12 plans visuels",
-                      "Animation pro",
-                      "1 format",
-                      "1 révision",
-                      "Livraison 5–7 jours",
-                    ].map((item) => (
-                      <li key={item} className="flex items-start gap-3">
-                        <span className="text-obsidian-gold mt-1 flex-shrink-0">
-                          <svg viewBox="0 0 16 16" fill="currentColor" className="w-2.5 h-2.5">
-                            <polygon points="8,1 15,8 8,15 1,8" />
-                          </svg>
+            {artistOffers.map((offer, i) => (
+              <FadeIn key={offer.id} delay={i * 0.1}>
+                <div
+                  className={cn(
+                    "relative border-r border-b border-obsidian-border p-10 flex flex-col h-full transition-colors duration-300",
+                    offer.bg
+                  )}
+                >
+                  {/* Featured badge */}
+                  {offer.badge && (
+                    <div className="absolute top-0 left-10 right-10">
+                      <div className={cn("h-px bg-gradient-to-r", offer.topLine)} />
+                      <div className="text-center -mt-2.5">
+                        <span className="bg-obsidian-charcoal px-4 text-obsidian-gold text-xs tracking-mega-wide uppercase">
+                          {offer.badge}
                         </span>
-                        <span className="text-obsidian-light text-sm">{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                      </div>
+                    </div>
+                  )}
 
-                <Link href="/contact" className="btn-outline justify-center text-center mt-10 py-4 text-xs tracking-widest uppercase">
-                  Démarrer
-                </Link>
-              </div>
-            </FadeIn>
+                  {/* Name */}
+                  <h3
+                    className={cn(
+                      "font-display text-3xl text-obsidian-white mb-2",
+                      offer.featured && "mt-4"
+                    )}
+                  >
+                    {offer.name}
+                  </h3>
 
-            {/* PREMIUM */}
-            <FadeIn delay={0.1}>
-              <div className="relative border-r border-b border-obsidian-border p-10 bg-obsidian-charcoal flex flex-col h-full">
-                <div className="absolute top-0 left-10 right-10">
-                  <div className="h-px bg-gradient-to-r from-transparent via-obsidian-gold to-transparent" />
-                  <div className="text-center -mt-2.5">
-                    <span className="bg-obsidian-charcoal px-4 text-obsidian-gold text-xs tracking-mega-wide uppercase">
-                      Le plus populaire
-                    </span>
+                  {/* Accent line */}
+                  <div
+                    className={cn(
+                      "w-8 h-px mb-6 bg-gradient-to-r",
+                      offer.topLine,
+                      !offer.featured && "opacity-60"
+                    )}
+                  />
+
+                  {/* Single price */}
+                  <div className="mb-8 pb-8 border-b border-obsidian-border">
+                    <p className={cn("font-display text-5xl font-light", offer.priceColor)}>
+                      {offer.price}
+                    </p>
+                    <p className="text-obsidian-silver text-xs mt-2 tracking-wider uppercase">
+                      Prix unique
+                    </p>
                   </div>
+
+                  {/* Included */}
+                  <div className="flex-1 mb-10">
+                    <h4 className="text-xs tracking-mega-wide uppercase text-obsidian-silver mb-4">
+                      Inclus
+                    </h4>
+                    <ul className="space-y-3">
+                      {offer.included.map((item) => (
+                        <li key={item} className="flex items-start gap-3">
+                          <span className={cn("mt-1 flex-shrink-0", offer.markerColor)}>
+                            <svg viewBox="0 0 16 16" fill="currentColor" className="w-2.5 h-2.5">
+                              <polygon points="8,1 15,8 8,15 1,8" />
+                            </svg>
+                          </span>
+                          <span className="text-obsidian-light text-sm">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* CTA */}
+                  <Link
+                    href="/contact"
+                    className={cn(
+                      "w-full text-center py-4 text-xs tracking-widest uppercase transition-all duration-300 justify-center",
+                      offer.ctaClass
+                    )}
+                  >
+                    {offer.cta}
+                  </Link>
                 </div>
-
-                <h3 className="font-display text-3xl text-obsidian-white mb-2 mt-4">Premium</h3>
-                <GoldLine className="w-8 mb-8" />
-
-                {/* Prices */}
-                <div className="space-y-0 border-t border-obsidian-border mb-8">
-                  {[["15s", "590\u00a0€"], ["30s", "890\u00a0€"], ["60s", "1\u202f390\u00a0€"]].map(([dur, price]) => (
-                    <div key={dur} className="flex items-center justify-between py-3 border-b border-obsidian-border">
-                      <span className="text-obsidian-silver text-sm tracking-widest uppercase">{dur}</span>
-                      <span className="font-display text-xl text-obsidian-gold">{price}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Inclus */}
-                <div className="flex-1">
-                  <h4 className="text-xs tracking-mega-wide uppercase text-obsidian-silver mb-4">Inclus</h4>
-                  <ul className="space-y-2.5">
-                    {[
-                      "3 vidéos",
-                      "15–20 plans premium",
-                      "Animation avancée",
-                      "Sound design pro",
-                      "2 formats",
-                      "2 révisions",
-                      "Livraison 7–10 jours",
-                    ].map((item) => (
-                      <li key={item} className="flex items-start gap-3">
-                        <span className="text-obsidian-gold mt-1 flex-shrink-0">
-                          <svg viewBox="0 0 16 16" fill="currentColor" className="w-2.5 h-2.5">
-                            <polygon points="8,1 15,8 8,15 1,8" />
-                          </svg>
-                        </span>
-                        <span className="text-obsidian-light text-sm">{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <Link href="/contact" className="btn-primary justify-center text-center mt-10 py-4 text-xs tracking-widest uppercase">
-                  Explorer Premium
-                </Link>
-              </div>
-            </FadeIn>
-
-            {/* ULTRA */}
-            <FadeIn delay={0.2}>
-              <div className="border-r border-b border-obsidian-border p-10 bg-obsidian-dark hover:bg-obsidian-charcoal transition-colors duration-300 flex flex-col h-full">
-                <h3 className="font-display text-3xl text-obsidian-white mb-2">Ultra</h3>
-                <GoldLine className="w-8 mb-8 opacity-40" />
-
-                {/* Prices */}
-                <div className="space-y-0 border-t border-obsidian-border mb-8">
-                  {[["15s", "1\u202f090\u00a0€"], ["30s", "1\u202f590\u00a0€"], ["60s", "2\u202f390\u00a0€"]].map(([dur, price]) => (
-                    <div key={dur} className="flex items-center justify-between py-3 border-b border-obsidian-border">
-                      <span className="text-obsidian-silver text-sm tracking-widest uppercase">{dur}</span>
-                      <span className="font-display text-xl text-obsidian-white">{price}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Inclus */}
-                <div className="flex-1">
-                  <h4 className="text-xs tracking-mega-wide uppercase text-obsidian-silver mb-4">Inclus</h4>
-                  <ul className="space-y-2.5">
-                    {[
-                      "5 vidéos",
-                      "Concept sur-mesure",
-                      "25–30 plans premium",
-                      "Animation cinéma",
-                      "3 formats",
-                      "3 révisions",
-                      "Livraison 10–14 jours",
-                      "Voix-off disponible",
-                    ].map((item) => (
-                      <li key={item} className="flex items-start gap-3">
-                        <span className="text-obsidian-gold mt-1 flex-shrink-0">
-                          <svg viewBox="0 0 16 16" fill="currentColor" className="w-2.5 h-2.5">
-                            <polygon points="8,1 15,8 8,15 1,8" />
-                          </svg>
-                        </span>
-                        <span className="text-obsidian-light text-sm">{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <Link href="/contact" className="btn-outline justify-center text-center mt-10 py-4 text-xs tracking-widest uppercase">
-                  Commander Ultra
-                </Link>
-              </div>
-            </FadeIn>
+              </FadeIn>
+            ))}
           </div>
         </div>
       </section>

@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { cn, siteConfig } from "@/lib/utils";
 
 const navLinks = [
   { href: "/",         label: "Accueil" },
@@ -156,7 +156,7 @@ export function Navbar() {
               transition={{ delay: 0.4 }}
             >
               <p className="text-obsidian-silver text-xs tracking-widest uppercase">
-                hello@obsidian-arts.com
+                {siteConfig.email}
               </p>
             </motion.div>
           </motion.div>
