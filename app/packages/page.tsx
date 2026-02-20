@@ -46,7 +46,7 @@ const artistOffers = [
     markerColor: "text-obsidian-gold",
     bg: "bg-obsidian-charcoal",
     included: [
-      "3 vidéos",
+      "2 vidéos",
       "15–20 plans premium",
       "Animation avancée",
       "Sound design pro",
@@ -68,7 +68,7 @@ const artistOffers = [
     markerColor: "text-obsidian-metal",
     bg: "bg-obsidian-dark hover:bg-obsidian-charcoal",
     included: [
-      "5 vidéos",
+      "3 vidéos",
       "Concept sur-mesure",
       "25–30 plans premium",
       "Animation cinéma",
