@@ -20,15 +20,20 @@ export default function ContactPage() {
           </FadeIn>
           <FadeIn delay={0.1}>
             <h1 className="heading-display text-6xl md:text-8xl text-obsidian-white mb-8 max-w-3xl">
-              Créons
+              Parlez-nous de
               <br />
-              <span className="text-gradient-gold">quelque chose de réel.</span>
+              <span className="text-gradient-gold">votre projet.</span>
             </h1>
           </FadeIn>
           <FadeIn delay={0.2}>
+            <div className="flex items-center gap-3 mb-6">
+              <span className="inline-flex items-center px-4 py-1.5 border border-obsidian-gold/40 text-obsidian-gold text-xs tracking-widest uppercase">
+                Réponse sous 24h
+              </span>
+            </div>
             <p className="text-obsidian-silver text-lg max-w-xl leading-relaxed">
-              Dites-nous sur quoi vous travaillez. Nous examinerons votre brief et vous
-              répondrons sous 24 heures avec nos premières réflexions.
+              Décrivez votre projet — artiste, commerce ou événement. Nous revenons
+              vers vous rapidement avec une première proposition concrète.
             </p>
           </FadeIn>
         </div>

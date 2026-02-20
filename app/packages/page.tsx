@@ -30,9 +30,8 @@ export default function PackagesPage() {
           </FadeIn>
           <FadeIn delay={0.2}>
             <p className="text-obsidian-silver text-lg max-w-2xl leading-relaxed">
-              Trois offres construites autour de différentes échelles d&apos;ambition créative.
-              Chacune est un engagement complet — conçu pour que vous sachiez exactement
-              ce que vous obtenez et pourquoi cela coûte ce que cela coûte.
+              Choisissez l&apos;offre adaptée à votre projet. Chaque formule est pensée
+              pour générer de l&apos;impact, pas juste de belles images.
             </p>
           </FadeIn>
         </div>

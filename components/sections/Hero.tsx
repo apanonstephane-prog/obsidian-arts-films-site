@@ -39,43 +39,46 @@ export function Hero() {
 
           {/* Headline */}
           <motion.h1
-            className="heading-display text-6xl md:text-8xl lg:text-[9rem] text-obsidian-white leading-none mb-10"
+            className="heading-display text-5xl md:text-7xl lg:text-8xl text-obsidian-white leading-none mb-8"
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
           >
-            La vision.
+            OBSIDIAN transforme
             <br />
-            <span className="text-gradient-gold">Sans</span>
+            <span className="text-gradient-gold">votre image</span>
             <br />
-            compromis.
+            en machine à clients.
           </motion.h1>
 
           {/* Subheading */}
           <motion.p
-            className="text-obsidian-silver text-lg md:text-xl leading-relaxed max-w-2xl mb-14"
+            className="text-obsidian-silver text-lg md:text-xl leading-relaxed max-w-2xl mb-12"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.5 }}
           >
-            Nous créons des films et du contenu visuel pour les artistes et les marques
-            qui refusent l&apos;ordinaire. Chaque plan est une déclaration.
-            Chaque seconde, délibérée.
+            Clips, vidéos promo et teasers qui attirent du public,
+            remplissent vos événements et font venir des clients.
           </motion.p>
 
-          {/* CTAs */}
+          {/* Audience CTAs */}
           <motion.div
-            className="flex flex-col sm:flex-row items-start gap-6"
+            className="flex flex-col sm:flex-row flex-wrap items-start gap-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.6 }}
           >
-            <Link href="/projects" className="btn-primary group">
-              Voir nos projets
+            <Link href="#artistes" className="btn-primary group">
+              Je suis artiste
               <ArrowIcon className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
             </Link>
-            <Link href="/contact" className="btn-ghost">
-              Démarrer un projet
+            <Link href="#commerces" className="btn-outline group">
+              J&apos;ai un commerce
+              <ArrowIcon className="w-4 h-4" />
+            </Link>
+            <Link href="#evenements" className="btn-ghost group">
+              J&apos;organise un événement
               <ArrowIcon className="w-4 h-4" />
             </Link>
           </motion.div>

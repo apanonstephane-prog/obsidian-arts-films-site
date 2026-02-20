@@ -4,6 +4,7 @@ import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { PageTransition } from "@/components/animations/PageTransition";
+import { StickyQuoteCTA } from "@/components/ui/StickyQuoteCTA";
 import { siteConfig } from "@/lib/utils";
 
 const inter = localFont({
@@ -86,9 +87,10 @@ export default function RootLayout({
       <body className="bg-obsidian-black text-obsidian-white antialiased">
         <Navbar />
         <PageTransition>
-          <main>{children}</main>
+          <main className="pb-20 sm:pb-0">{children}</main>
         </PageTransition>
         <Footer />
+        <StickyQuoteCTA />
       </body>
     </html>
   );
