@@ -16,9 +16,8 @@ export const siteConfig = {
   description:
     "OBSIDIAN est un studio de production créative haut de gamme spécialisé dans les clips musicaux, les films publicitaires, le contenu de marque et la narration visuelle haute performance.",
   url: "https://obsidian-arts.com",
-  email: "hello@obsidian-arts.com",
+  email: "obsidian.arts.films@gmail.com",
   social: {
-    instagram: "https://instagram.com/obsidianarts",
-    vimeo: "https://vimeo.com/obsidianarts",
+    instagram: "https://www.instagram.com/obsidian_arts_films",
   },
 };

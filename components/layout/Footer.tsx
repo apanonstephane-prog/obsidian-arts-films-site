@@ -24,7 +24,6 @@ const footerLinks: Record<string, FooterLink[]> = {
   Contact: [
     { href: "/contact",                           label: "Démarrer un projet" },
     { href: siteConfig.social.instagram, label: "Instagram", external: true },
-    { href: siteConfig.social.vimeo,     label: "Vimeo",     external: true },
     { href: `mailto:${siteConfig.email}`, label: "Écrire",   external: true },
   ],
 };

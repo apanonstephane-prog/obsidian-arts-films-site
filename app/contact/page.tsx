@@ -77,14 +77,6 @@ export default function ContactPage() {
                       >
                         Instagram
                       </a>
-                      <a
-                        href={siteConfig.social.vimeo}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-obsidian-light text-sm hover:text-obsidian-gold transition-colors duration-200"
-                      >
-                        Vimeo
-                      </a>
                     </div>
                   </div>
 
