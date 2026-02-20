@@ -12,17 +12,17 @@ export function HomeCTA() {
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-12 text-center">
         <FadeIn>
-          <p className="section-label mb-8 inline-block">Ready to Begin</p>
+          <p className="section-label mb-8 inline-block">Prêt à commencer</p>
         </FadeIn>
         <FadeIn delay={0.1}>
           <h2 className="heading-display text-5xl md:text-7xl lg:text-8xl text-obsidian-white mb-8 max-w-4xl mx-auto">
-            Your vision deserves
-            <span className="text-gradient-gold"> better execution.</span>
+            Votre vision mérite
+            <span className="text-gradient-gold"> une meilleure exécution.</span>
           </h2>
         </FadeIn>
         <FadeIn delay={0.2}>
           <p className="text-obsidian-silver text-lg max-w-xl mx-auto mb-14">
-            Tell us what you're building. We'll tell you how we can make it unforgettable.
+            Dites-nous ce que vous construisez. Nous vous dirons comment le rendre inoubliable.
           </p>
         </FadeIn>
         <FadeIn delay={0.3}>

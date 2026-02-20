@@ -2,17 +2,18 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
-  { href: "/", label: "Home" },
+  { href: "/",         label: "Accueil" },
   { href: "/services", label: "Services" },
-  { href: "/projects", label: "Projects" },
-  { href: "/about", label: "About" },
-  { href: "/packages", label: "Packages" },
-  { href: "/contact", label: "Contact" },
+  { href: "/projects", label: "Projets" },
+  { href: "/about",    label: "Studio" },
+  { href: "/packages", label: "Offres" },
+  { href: "/contact",  label: "Contact" },
 ];
 
 export function Navbar() {
@@ -26,19 +27,11 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
+  useEffect(() => { setMenuOpen(false); }, [pathname]);
 
   useEffect(() => {
-    if (menuOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
+    document.body.style.overflow = menuOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
   }, [menuOpen]);
 
   return (
@@ -47,7 +40,7 @@ export function Navbar() {
         className={cn(
           "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
           scrolled
-            ? "bg-obsidian-black/90 backdrop-blur-md border-b border-obsidian-border"
+            ? "bg-obsidian-black/92 backdrop-blur-md border-b border-obsidian-border"
             : "bg-transparent"
         )}
         initial={{ y: -80, opacity: 0 }}
@@ -56,16 +49,24 @@ export function Navbar() {
       >
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <div className="flex items-center justify-between h-20">
+
             {/* Logo */}
-            <Link href="/" className="group flex items-center gap-3">
-              <div className="w-6 h-6 bg-obsidian-gold transform rotate-45 transition-transform duration-300 group-hover:rotate-90" />
-              <span className="font-display text-lg tracking-ultra-wide uppercase text-obsidian-white">
+            <Link href="/" className="group flex items-center gap-3" aria-label="OBSIDIAN Arts et Films — Accueil">
+              <Image
+                src="/brand/icon-white.svg"
+                alt="OBSIDIAN Arts et Films"
+                width={32}
+                height={27}
+                className="transition-opacity duration-300 group-hover:opacity-75"
+                priority
+              />
+              <span className="font-display text-base tracking-ultra-wide uppercase text-obsidian-white">
                 OBSIDIAN
               </span>
             </Link>
 
-            {/* Desktop Nav */}
-            <nav className="hidden lg:flex items-center gap-10">
+            {/* Desktop nav */}
+            <nav className="hidden lg:flex items-center gap-10" aria-label="Navigation principale">
               {navLinks.slice(1, -1).map((link) => (
                 <Link
                   key={link.href}
@@ -83,17 +84,18 @@ export function Navbar() {
             </nav>
 
             {/* CTA */}
-            <div className="hidden lg:flex items-center gap-6">
+            <div className="hidden lg:flex">
               <Link href="/contact" className="btn-primary text-xs py-3 px-6">
-                Start a Project
+                Démarrer un projet
               </Link>
             </div>
 
-            {/* Mobile Menu Toggle */}
+            {/* Mobile toggle */}
             <button
               className="lg:hidden flex flex-col gap-1.5 p-2"
               onClick={() => setMenuOpen(!menuOpen)}
-              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              aria-label={menuOpen ? "Fermer le menu" : "Ouvrir le menu"}
+              aria-expanded={menuOpen}
             >
               <motion.span
                 className="block w-6 h-px bg-obsidian-white origin-center"
@@ -115,7 +117,7 @@ export function Navbar() {
         </div>
       </motion.header>
 
-      {/* Mobile Menu */}
+      {/* Mobile menu */}
       <AnimatePresence>
         {menuOpen && (
           <motion.div
@@ -125,7 +127,7 @@ export function Navbar() {
             exit={{ opacity: 0, clipPath: "inset(0 0 100% 0)" }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           >
-            <nav className="flex flex-col gap-8">
+            <nav className="flex flex-col gap-8" aria-label="Menu mobile">
               {navLinks.map((link, i) => (
                 <motion.div
                   key={link.href}

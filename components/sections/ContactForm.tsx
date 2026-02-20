@@ -6,22 +6,22 @@ import { FadeIn } from "@/components/animations/FadeIn";
 import { ArrowIcon } from "@/components/ui/ArrowIcon";
 
 const budgetRanges = [
-  "Under €5,000",
-  "€5,000 – €15,000",
-  "€15,000 – €35,000",
-  "€35,000 – €75,000",
-  "€75,000+",
-  "Let's discuss",
+  "Moins de 5 000 €",
+  "5 000 € – 15 000 €",
+  "15 000 € – 35 000 €",
+  "35 000 € – 75 000 €",
+  "75 000 € et plus",
+  "À discuter",
 ];
 
 const projectTypes = [
-  "Music Video",
-  "Commercial Film",
-  "Brand Film",
-  "Social Media Campaign",
-  "Branding & Identity",
-  "Campaign Production",
-  "Other / Multiple",
+  "Clip musical",
+  "Film publicitaire",
+  "Film de marque",
+  "Campagne réseaux sociaux",
+  "Identité & stratégie de marque",
+  "Production de campagne",
+  "Autre / Plusieurs",
 ];
 
 interface FormState {
@@ -84,10 +84,10 @@ export function ContactForm() {
         <div className="border border-obsidian-gold/30 bg-obsidian-charcoal p-16 text-center">
           <div className="w-12 h-px bg-obsidian-gold mx-auto mb-8" />
           <h3 className="font-display text-3xl text-obsidian-white mb-4">
-            Message received.
+            Message reçu.
           </h3>
           <p className="text-obsidian-silver text-base">
-            We review every submission personally and will be in touch within 24 hours.
+            Nous lisons chaque message personnellement et vous répondons sous 24 heures.
           </p>
           <button
             onClick={() => setStatus("idle")}
@@ -115,7 +115,7 @@ export function ContactForm() {
               value={form.name}
               onChange={handleChange}
               required
-              placeholder="Your full name"
+              placeholder="Votre nom complet"
               className="w-full bg-obsidian-charcoal border border-obsidian-border text-obsidian-white placeholder-obsidian-muted px-5 py-4 text-sm focus:outline-none focus:border-obsidian-gold transition-colors duration-200"
             />
           </div>
@@ -190,7 +190,7 @@ export function ContactForm() {
             onChange={handleChange}
             required
             rows={7}
-            placeholder="Tell us about your project. What are you creating, who is it for, and what does success look like to you?"
+            placeholder="Décrivez-nous votre projet. Que créez-vous, pour qui, et à quoi ressemble le succès pour vous ?"
             className="w-full bg-obsidian-charcoal border border-obsidian-border text-obsidian-white placeholder-obsidian-muted px-5 py-4 text-sm focus:outline-none focus:border-obsidian-gold transition-colors duration-200 resize-none"
           />
         </div>
@@ -198,7 +198,7 @@ export function ContactForm() {
         {/* Error */}
         {status === "error" && (
           <p className="text-red-400 text-sm">
-            Please fill in all required fields with a valid email address.
+            Veuillez remplir tous les champs obligatoires avec une adresse e-mail valide.
           </p>
         )}
 
@@ -240,7 +240,7 @@ export function ContactForm() {
         </div>
 
         <p className="text-obsidian-muted text-xs">
-          All inquiries are reviewed personally. No spam, no automated marketing.
+          Chaque demande est lue personnellement. Aucun spam, aucun marketing automatisé.
         </p>
       </form>
     </FadeIn>

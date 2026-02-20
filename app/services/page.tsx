@@ -8,7 +8,7 @@ import { ArrowIcon } from "@/components/ui/ArrowIcon";
 export const metadata: Metadata = {
   title: "Services",
   description:
-    "Film production, branding & strategy, social media content, and campaign production. End-to-end creative services for artists and brands.",
+    "Production cinématographique, identité de marque, contenu réseaux sociaux et production de campagne. Services créatifs de bout en bout pour les artistes et les marques.",
 };
 
 export default function ServicesPage() {
@@ -18,20 +18,20 @@ export default function ServicesPage() {
       <section className="pt-40 pb-24 bg-obsidian-black">
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <FadeIn>
-            <span className="section-label mb-6 block">Our Services</span>
+            <span className="section-label mb-6 block">Nos services</span>
           </FadeIn>
           <FadeIn delay={0.1}>
             <h1 className="heading-display text-6xl md:text-8xl text-obsidian-white mb-8 max-w-4xl">
-              Four disciplines.
+              Quatre disciplines.
               <br />
-              <span className="text-gradient-gold">One standard.</span>
+              <span className="text-gradient-gold">Un seul standard.</span>
             </h1>
           </FadeIn>
           <FadeIn delay={0.2}>
             <p className="text-obsidian-silver text-lg max-w-2xl leading-relaxed">
-              We don't offer everything. We've chosen the disciplines where we can be
-              genuinely exceptional, and we've built every process, every team member, and
-              every decision around achieving that.
+              Nous ne proposons pas tout. Nous avons choisi les disciplines où nous pouvons
+              être véritablement exceptionnels, et nous avons construit chaque processus,
+              chaque décision autour de cet objectif.
             </p>
           </FadeIn>
         </div>
@@ -75,7 +75,7 @@ export default function ServicesPage() {
                 <FadeIn direction="right" delay={0.2}>
                   <div>
                     <h3 className="text-xs tracking-mega-wide uppercase text-obsidian-silver mb-8">
-                      What's Included
+                      Ce qui est inclus
                     </h3>
                     <ul className="space-y-4">
                       {service.deliverables.map((item, j) => (
@@ -94,7 +94,7 @@ export default function ServicesPage() {
                     </ul>
                     <div className="mt-10">
                       <Link href="/contact" className="btn-outline">
-                        Discuss This Service
+                        Discuter de ce service
                         <ArrowIcon className="w-4 h-4" />
                       </Link>
                     </div>
@@ -110,22 +110,22 @@ export default function ServicesPage() {
       <section className="py-32 bg-obsidian-black text-center">
         <div className="max-w-4xl mx-auto px-6 lg:px-12">
           <FadeIn>
-            <p className="section-label mb-8 inline-block">Ready to Work</p>
+            <p className="section-label mb-8 inline-block">Prêt à travailler</p>
           </FadeIn>
           <FadeIn delay={0.1}>
             <h2 className="heading-display text-5xl md:text-6xl text-obsidian-white mb-8">
-              Not sure which service fits?
+              Vous ne savez pas quel service vous convient ?
             </h2>
           </FadeIn>
           <FadeIn delay={0.2}>
             <p className="text-obsidian-silver text-lg mb-10 max-w-xl mx-auto">
-              Tell us what you're trying to achieve. We'll recommend the right
-              approach and build a custom scope that fits your goals.
+              Dites-nous ce que vous cherchez à accomplir. Nous recommanderons la bonne
+              approche et construirons un périmètre sur mesure adapté à vos objectifs.
             </p>
           </FadeIn>
           <FadeIn delay={0.3}>
             <Link href="/contact" className="btn-primary">
-              Start the Conversation
+              Démarrer la conversation
               <ArrowIcon className="w-4 h-4" />
             </Link>
           </FadeIn>

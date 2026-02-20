@@ -3,7 +3,7 @@ export function cn(...classes: (string | undefined | null | false)[]): string {
 }
 
 export function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString("en-US", {
+  return new Date(dateString).toLocaleDateString("fr-FR", {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -12,9 +12,9 @@ export function formatDate(dateString: string): string {
 
 export const siteConfig = {
   name: "OBSIDIAN Arts & Films",
-  tagline: "High-end creative production",
+  tagline: "Production créative haut de gamme",
   description:
-    "OBSIDIAN is a premium creative production studio specialized in music videos, commercial films, branding content, and high-performance visual storytelling.",
+    "OBSIDIAN est un studio de production créative haut de gamme spécialisé dans les clips musicaux, les films publicitaires, le contenu de marque et la narration visuelle haute performance.",
   url: "https://obsidian-arts.com",
   email: "hello@obsidian-arts.com",
   social: {

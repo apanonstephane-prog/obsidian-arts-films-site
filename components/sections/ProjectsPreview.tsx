@@ -16,8 +16,8 @@ export function ProjectsPreview() {
         <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-8 mb-16">
           <FadeIn>
             <SectionHeader
-              label="Selected Work"
-              title="Projects that moved people."
+              label="Travaux sélectionnés"
+              title="Des projets qui touchent."
               className="mb-0"
             />
           </FadeIn>

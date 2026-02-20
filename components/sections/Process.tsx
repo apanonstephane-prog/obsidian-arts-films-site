@@ -7,27 +7,27 @@ import { GoldLine } from "@/components/ui/GoldLine";
 const steps = [
   {
     number: "01",
-    title: "Strategic Alignment",
+    title: "Alignement stratégique",
     description:
-      "Before any creative decisions are made, we spend time understanding your objectives, your audience, and what success actually looks like. This conversation shapes everything that follows.",
+      "Avant toute décision créative, nous prenons le temps de comprendre vos objectifs, votre audience et ce que signifie vraiment le succès. Cette conversation façonne tout ce qui suit.",
   },
   {
     number: "02",
-    title: "Concept Development",
+    title: "Développement du concept",
     description:
-      "We develop a creative concept that is specific to you—not adapted from a template. Each concept is pressure-tested against your brief before a single frame is planned.",
+      "Nous développons un concept créatif spécifique à vous — pas adapté d\'un modèle. Chaque concept est testé face à votre brief avant qu\'un seul plan ne soit planifié.",
   },
   {
     number: "03",
-    title: "Precision Production",
+    title: "Production précise",
     description:
-      "Production executed with obsessive attention to detail. Every element—from location to lighting to performance—is selected because it serves the idea, not because it's convenient.",
+      "Une production menée avec une attention obsessionnelle aux détails. Chaque élément — lieu, lumière, performance — est choisi parce qu\'il sert l\'idée, pas parce qu\'il est pratique.",
   },
   {
     number: "04",
-    title: "Refined Delivery",
+    title: "Livraison affinée",
     description:
-      "Post-production and final delivery built around your timeline and platform requirements. The work doesn't leave our hands until it's ready to perform.",
+      "Post-production et livraison finale construites autour de vos délais et de vos besoins en plateforme. Le travail ne quitte pas nos mains avant d\'être prêt à performer.",
   },
 ];
 
@@ -37,9 +37,9 @@ export function Process() {
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         <FadeIn>
           <SectionHeader
-            label="How We Work"
-            title="Process is what separates good from great."
-            subtitle="A four-phase approach designed to eliminate ambiguity and deliver creative work that performs."
+            label="Notre méthode"
+            title="Le processus sépare le bon de l'exceptionnel."
+            subtitle="Une approche en quatre phases conçue pour éliminer l'ambiguïté et produire un travail créatif qui performe."
             align="center"
           />
         </FadeIn>

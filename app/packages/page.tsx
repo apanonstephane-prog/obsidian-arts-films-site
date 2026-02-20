@@ -7,9 +7,9 @@ import { ArrowIcon } from "@/components/ui/ArrowIcon";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "Packages",
+  title: "Offres",
   description:
-    "Three production packages designed for different levels of creative ambition. Essentiel, Premium, and Ultra—each built around a specific type of client and project.",
+    "Trois offres de production conçues pour différents niveaux d'ambition créative. Essentiel, Premium et Ultra — chacune pensée autour d'un type spécifique de client et de projet.",
 };
 
 export default function PackagesPage() {
@@ -19,20 +19,20 @@ export default function PackagesPage() {
       <section className="pt-40 pb-24 bg-obsidian-black">
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <FadeIn>
-            <span className="section-label mb-6 block">Investment</span>
+            <span className="section-label mb-6 block">Investissement</span>
           </FadeIn>
           <FadeIn delay={0.1}>
             <h1 className="heading-display text-6xl md:text-8xl text-obsidian-white mb-8 max-w-4xl">
-              Choose your
+              Choisissez votre
               <br />
-              <span className="text-gradient-gold">level of ambition.</span>
+              <span className="text-gradient-gold">niveau d&apos;ambition.</span>
             </h1>
           </FadeIn>
           <FadeIn delay={0.2}>
             <p className="text-obsidian-silver text-lg max-w-2xl leading-relaxed">
-              Three packages built around different scales of creative ambition.
-              Each one is a complete engagement—designed so you know exactly what
-              you're getting and why it costs what it costs.
+              Trois offres construites autour de différentes échelles d&apos;ambition créative.
+              Chacune est un engagement complet — conçu pour que vous sachiez exactement
+              ce que vous obtenez et pourquoi cela coûte ce que cela coûte.
             </p>
           </FadeIn>
         </div>
@@ -57,7 +57,7 @@ export default function PackagesPage() {
                       <div className="h-px bg-gradient-to-r from-transparent via-obsidian-gold to-transparent" />
                       <div className="text-center -mt-2.5">
                         <span className="bg-obsidian-charcoal px-4 text-obsidian-gold text-xs tracking-mega-wide uppercase">
-                          Most Selected
+                          Le plus choisi
                         </span>
                       </div>
                     </div>
@@ -88,13 +88,13 @@ export default function PackagesPage() {
                     <div>
                       <p className="text-obsidian-white font-display text-3xl">{pkg.price}</p>
                       <p className="text-obsidian-silver text-xs mt-1 tracking-wider">
-                        Starting investment
+                        Investissement de départ
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="text-obsidian-gold text-sm">{pkg.timeline}</p>
                       <p className="text-obsidian-silver text-xs mt-1 tracking-wider">
-                        Timeline
+                        Délai
                       </p>
                     </div>
                   </div>
@@ -102,7 +102,7 @@ export default function PackagesPage() {
                   {/* Ideal Client */}
                   <div className="mb-8">
                     <h3 className="text-xs tracking-mega-wide uppercase text-obsidian-silver mb-3">
-                      Ideal For
+                      Idéal pour
                     </h3>
                     <p className="text-obsidian-light text-sm leading-relaxed">
                       {pkg.idealClient}
@@ -112,7 +112,7 @@ export default function PackagesPage() {
                   {/* Included */}
                   <div className="mb-10 flex-1">
                     <h3 className="text-xs tracking-mega-wide uppercase text-obsidian-silver mb-4">
-                      Included
+                      Inclus
                     </h3>
                     <ul className="space-y-3">
                       {pkg.included.map((item, i) => (
@@ -152,20 +152,20 @@ export default function PackagesPage() {
         <div className="max-w-4xl mx-auto px-6 lg:px-12 text-center">
           <FadeIn>
             <h2 className="heading-display text-3xl md:text-4xl text-obsidian-white mb-6">
-              Need something custom?
+              Besoin d&apos;une solution personnalisée ?
             </h2>
           </FadeIn>
           <FadeIn delay={0.1}>
             <p className="text-obsidian-silver text-base leading-relaxed mb-10 max-w-2xl mx-auto">
-              Our packages are starting points, not limits. Complex projects, multi-phase
-              campaigns, or ongoing retainer relationships are all structured to fit your
-              specific requirements. Tell us what you're building and we'll design the right
-              engagement model.
+              Nos offres sont des points de départ, pas des limites. Les projets complexes,
+              les campagnes multi-phases ou les relations de partenariat continu sont tous
+              structurés selon vos besoins spécifiques. Dites-nous ce que vous construisez
+              et nous concevrons le bon modèle d&apos;engagement.
             </p>
           </FadeIn>
           <FadeIn delay={0.2}>
             <Link href="/contact" className="btn-ghost">
-              Discuss Custom Scope
+              Discuter d&apos;une offre sur mesure
               <ArrowIcon className="w-4 h-4" />
             </Link>
           </FadeIn>

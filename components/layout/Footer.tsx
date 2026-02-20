@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { siteConfig } from "@/lib/utils";
 
 interface FooterLink {
@@ -9,22 +10,22 @@ interface FooterLink {
 
 const footerLinks: Record<string, FooterLink[]> = {
   Studio: [
-    { href: "/about", label: "About" },
+    { href: "/about",    label: "Studio" },
     { href: "/services", label: "Services" },
-    { href: "/projects", label: "Projects" },
-    { href: "/packages", label: "Packages" },
+    { href: "/projects", label: "Projets" },
+    { href: "/packages", label: "Offres" },
   ],
-  Work: [
-    { href: "/projects", label: "Music Videos" },
-    { href: "/projects", label: "Commercial Films" },
-    { href: "/projects", label: "Brand Content" },
-    { href: "/projects", label: "Campaigns" },
+  Projets: [
+    { href: "/projects", label: "Clips musicaux" },
+    { href: "/projects", label: "Films publicitaires" },
+    { href: "/projects", label: "Contenu de marque" },
+    { href: "/projects", label: "Campagnes" },
   ],
-  Connect: [
-    { href: "/contact", label: "Start a Project" },
+  Contact: [
+    { href: "/contact",                           label: "Démarrer un projet" },
     { href: siteConfig.social.instagram, label: "Instagram", external: true },
-    { href: siteConfig.social.vimeo, label: "Vimeo", external: true },
-    { href: `mailto:${siteConfig.email}`, label: "Email Us", external: true },
+    { href: siteConfig.social.vimeo,     label: "Vimeo",     external: true },
+    { href: `mailto:${siteConfig.email}`, label: "Écrire",   external: true },
   ],
 };
 
@@ -35,17 +36,21 @@ export function Footer() {
     <footer className="bg-obsidian-dark border-t border-obsidian-border">
       <div className="max-w-7xl mx-auto px-6 lg:px-12 pt-20 pb-10">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-16 mb-20">
+
           {/* Brand */}
           <div className="lg:col-span-2">
-            <Link href="/" className="group flex items-center gap-3 mb-6">
-              <div className="w-5 h-5 bg-obsidian-gold transform rotate-45 transition-transform duration-300 group-hover:rotate-90" />
-              <span className="font-display text-base tracking-ultra-wide uppercase text-obsidian-white">
-                OBSIDIAN
-              </span>
+            <Link href="/" className="group flex items-center gap-3 mb-6" aria-label="OBSIDIAN Arts et Films — Accueil">
+              <Image
+                src="/brand/logo-white.svg"
+                alt="OBSIDIAN Arts et Films"
+                width={140}
+                height={50}
+                className="transition-opacity duration-300 group-hover:opacity-80"
+              />
             </Link>
             <p className="text-obsidian-silver text-sm leading-relaxed max-w-xs mb-8">
-              High-end creative production studio. We build visual worlds for
-              artists, brands, and those who demand more.
+              Studio de production créative haut de gamme. Nous construisons des univers
+              visuels pour les artistes, les marques et ceux qui exigent davantage.
             </p>
             <a
               href={`mailto:${siteConfig.email}`}
@@ -88,13 +93,13 @@ export function Footer() {
           ))}
         </div>
 
-        {/* Bottom bar */}
+        {/* Bottom */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-8 border-t border-obsidian-border gap-4">
           <p className="text-obsidian-silver text-xs tracking-wider">
-            &copy; {year} OBSIDIAN Arts & Films. All rights reserved.
+            &copy; {year} OBSIDIAN Arts &amp; Films. Tous droits réservés.
           </p>
           <p className="text-obsidian-muted text-xs tracking-wider">
-            Crafted with precision.
+            Conçu avec précision.
           </p>
         </div>
       </div>

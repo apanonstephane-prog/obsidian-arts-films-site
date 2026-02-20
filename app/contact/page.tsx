@@ -6,7 +6,7 @@ import { siteConfig } from "@/lib/utils";
 export const metadata: Metadata = {
   title: "Contact",
   description:
-    "Start a project with OBSIDIAN Arts & Films. Tell us about your vision and we'll respond within 24 hours.",
+    "Démarrez un projet avec OBSIDIAN Arts & Films. Partagez votre vision et nous vous répondrons sous 24 heures.",
 };
 
 export default function ContactPage() {
@@ -16,19 +16,19 @@ export default function ContactPage() {
       <section className="pt-40 pb-16 bg-obsidian-black">
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <FadeIn>
-            <span className="section-label mb-6 block">Get in Touch</span>
+            <span className="section-label mb-6 block">Nous contacter</span>
           </FadeIn>
           <FadeIn delay={0.1}>
             <h1 className="heading-display text-6xl md:text-8xl text-obsidian-white mb-8 max-w-3xl">
-              Let's make
+              Créons
               <br />
-              <span className="text-gradient-gold">something real.</span>
+              <span className="text-gradient-gold">quelque chose de réel.</span>
             </h1>
           </FadeIn>
           <FadeIn delay={0.2}>
             <p className="text-obsidian-silver text-lg max-w-xl leading-relaxed">
-              Tell us what you're working on. We'll review your brief and respond
-              within 24 hours with our initial thoughts.
+              Dites-nous sur quoi vous travaillez. Nous examinerons votre brief et vous
+              répondrons sous 24 heures avec nos premières réflexions.
             </p>
           </FadeIn>
         </div>
@@ -56,17 +56,17 @@ export default function ContactPage() {
 
                   <div>
                     <h3 className="text-xs tracking-mega-wide uppercase text-obsidian-silver mb-4">
-                      Response Time
+                      Délai de réponse
                     </h3>
-                    <p className="text-obsidian-light text-sm">Within 24 hours</p>
+                    <p className="text-obsidian-light text-sm">Sous 24 heures</p>
                     <p className="text-obsidian-muted text-xs mt-1">
-                      Monday – Friday
+                      Lundi – Vendredi
                     </p>
                   </div>
 
                   <div>
                     <h3 className="text-xs tracking-mega-wide uppercase text-obsidian-silver mb-4">
-                      Social
+                      Réseaux sociaux
                     </h3>
                     <div className="space-y-3">
                       <a
@@ -90,8 +90,9 @@ export default function ContactPage() {
 
                   <div className="pt-8 border-t border-obsidian-border">
                     <p className="text-obsidian-silver text-xs leading-relaxed">
-                      We respond to every inquiry personally. No automated responses,
-                      no sales calls—just a direct conversation about your project.
+                      Nous répondons personnellement à chaque demande. Pas de réponses
+                      automatisées, pas d&apos;appels commerciaux — juste une conversation
+                      directe sur votre projet.
                     </p>
                   </div>
                 </div>

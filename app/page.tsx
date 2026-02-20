@@ -6,9 +6,9 @@ import { Process } from "@/components/sections/Process";
 import { HomeCTA } from "@/components/sections/HomeCTA";
 
 export const metadata: Metadata = {
-  title: "OBSIDIAN Arts & Films — Premium Creative Production Studio",
+  title: "OBSIDIAN Arts & Films — Studio de production créative haut de gamme",
   description:
-    "High-end cinematic video production and branding agency. Music videos, commercial films, branding content, and social media campaigns for artists and brands who demand more.",
+    "Studio de production cinématographique haut de gamme. Clips musicaux, films publicitaires, contenu de marque et campagnes réseaux sociaux pour les artistes et les marques qui exigent davantage.",
 };
 
 export default function HomePage() {

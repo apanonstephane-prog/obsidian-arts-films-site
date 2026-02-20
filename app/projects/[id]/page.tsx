@@ -17,7 +17,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const project = getProjectById(params.id);
-  if (!project) return { title: "Project Not Found" };
+  if (!project) return { title: "Projet introuvable" };
   return {
     title: `${project.title} — ${project.client}`,
     description: project.tagline,
@@ -91,10 +91,10 @@ export default function ProjectPage({ params }: Props) {
             {/* Main content */}
             <div className="lg:col-span-9 space-y-20">
               {[
-                { label: "Context", content: project.context },
-                { label: "Strategy", content: project.strategy },
-                { label: "Execution", content: project.execution },
-                { label: "Results", content: project.results },
+                { label: "Contexte", content: project.context },
+                { label: "Stratégie", content: project.strategy },
+                { label: "Exécution", content: project.execution },
+                { label: "Résultats", content: project.results },
               ].map((section, i) => (
                 <FadeIn key={section.label} delay={i * 0.1}>
                   <div>
@@ -129,7 +129,7 @@ export default function ProjectPage({ params }: Props) {
           <div className="relative z-10 flex items-center justify-between h-full max-w-7xl mx-auto px-6 lg:px-12">
             <div>
               <p className="text-obsidian-silver text-xs tracking-mega-wide uppercase mb-2">
-                Next Project
+                Projet suivant
               </p>
               <h3 className="font-display text-4xl text-obsidian-white group-hover:text-obsidian-gold transition-colors duration-300">
                 {nextProject.title}
@@ -149,7 +149,7 @@ export default function ProjectPage({ params }: Props) {
             className="flex items-center gap-3 text-obsidian-silver hover:text-obsidian-gold transition-colors duration-200 text-xs tracking-widest uppercase"
           >
             <ArrowIcon className="w-4 h-4" direction="left" />
-            All Projects
+            Tous les projets
           </Link>
         </div>
       </div>

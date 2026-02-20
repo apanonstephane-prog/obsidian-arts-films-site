@@ -6,31 +6,31 @@ import { GoldLine } from "@/components/ui/GoldLine";
 import { ArrowIcon } from "@/components/ui/ArrowIcon";
 
 export const metadata: Metadata = {
-  title: "About",
+  title: "Studio",
   description:
-    "OBSIDIAN was built on a single conviction: that the gap between creative ambition and professional execution shouldn't exist. Learn about our vision, methodology, and philosophy.",
+    "OBSIDIAN a été fondé sur une conviction unique : que l'écart entre ambition créative et exécution professionnelle ne devrait pas exister. Notre vision, méthodologie et philosophie.",
 };
 
 const values = [
   {
-    title: "Specificity over scale",
+    title: "Spécificité plutôt qu'échelle",
     description:
-      "We work with fewer clients to go deeper with each one. Our work is specific because your project deserves it—not adapted from a previous template.",
+      "Nous travaillons avec moins de clients pour aller plus loin avec chacun. Notre travail est spécifique parce que votre projet le mérite — pas adapté d'un modèle précédent.",
   },
   {
-    title: "Restraint as power",
+    title: "La retenue comme puissance",
     description:
-      "The most powerful creative decisions are often what you remove. We apply this discipline to every frame, every word, every deliverable.",
+      "Les décisions créatives les plus puissantes sont souvent ce que vous supprimez. Nous appliquons cette discipline à chaque plan, chaque mot, chaque livrable.",
   },
   {
-    title: "Intelligence before execution",
+    title: "L'intelligence avant l'exécution",
     description:
-      "Beautiful work that misses the brief is a failure. We ask harder questions before we pick up a camera, so every creative decision has a strategic reason.",
+      "Un beau travail qui rate le brief est un échec. Nous posons les questions difficiles avant de saisir une caméra, afin que chaque décision créative ait une raison stratégique.",
   },
   {
-    title: "Longevity over virality",
+    title: "La durabilité plutôt que la viralité",
     description:
-      "We create work that ages well—that represents you accurately in two years, not just two weeks. The internet has enough content that disappears.",
+      "Nous créons un travail qui vieillit bien — qui vous représente fidèlement dans deux ans, pas seulement deux semaines. L'internet a assez de contenu éphémère.",
   },
 ];
 
@@ -38,22 +38,22 @@ const methodology = [
   {
     phase: "Interrogation",
     description:
-      "We ask the questions your previous agencies were afraid to ask. What does success actually look like? Who is this really for? What do you want people to feel? The answers shape everything.",
+      "Nous posons les questions que vos agences précédentes avaient peur de poser. À quoi ressemble vraiment le succès ? Pour qui est-ce vraiment ? Que voulez-vous faire ressentir ? Les réponses façonnent tout.",
   },
   {
     phase: "Architecture",
     description:
-      "Before production starts, we build the creative architecture. Concept, visual language, emotional arc, strategic objectives. Each element is purposeful.",
+      "Avant le début de la production, nous construisons l'architecture créative. Concept, langage visuel, arc émotionnel, objectifs stratégiques. Chaque élément est intentionnel.",
   },
   {
-    phase: "Execution",
+    phase: "Exécution",
     description:
-      "Production with film-school discipline and commercial efficiency. Every crew member, every piece of equipment, every location exists to serve the idea.",
+      "Une production menée avec la rigueur d'une école de cinéma et l'efficacité commerciale. Chaque membre de l'équipe, chaque équipement, chaque lieu existe pour servir l'idée.",
   },
   {
-    phase: "Refinement",
+    phase: "Affinement",
     description:
-      "Post-production where ideas are completed, not corrected. We finish what we started, ensuring the final work achieves what we set out to achieve.",
+      "La post-production où les idées s'achèvent, pas se corrigent. Nous terminons ce que nous avons commencé, en veillant à ce que le travail final atteigne ce que nous avions prévu.",
   },
 ];
 
@@ -64,14 +64,14 @@ export default function AboutPage() {
       <section className="pt-40 pb-24 bg-obsidian-black">
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <FadeIn>
-            <span className="section-label mb-6 block">About OBSIDIAN</span>
+            <span className="section-label mb-6 block">À propos d&apos;OBSIDIAN</span>
           </FadeIn>
           <FadeIn delay={0.1}>
             <h1 className="heading-display text-6xl md:text-8xl text-obsidian-white mb-8 max-w-4xl">
-              Built on the conviction
+              Fondé sur la conviction
               <br />
-              that{" "}
-              <span className="text-gradient-gold">excellence is non-negotiable.</span>
+              que{" "}
+              <span className="text-gradient-gold">l&apos;excellence n&apos;est pas négociable.</span>
             </h1>
           </FadeIn>
         </div>
@@ -84,29 +84,30 @@ export default function AboutPage() {
             <FadeIn>
               <SectionHeader
                 label="Vision"
-                title="Why OBSIDIAN exists."
+                title="Pourquoi OBSIDIAN existe."
               />
               <p className="text-obsidian-light text-base leading-relaxed mb-6">
-                OBSIDIAN was founded because the market offered a choice between affordable
-                mediocrity and expensive mediocrity. Genuinely excellent creative work—work
-                that thinks strategically and executes beautifully—was reserved for clients
-                with major label or Fortune 500 budgets.
+                OBSIDIAN a été fondé parce que le marché offrait un choix entre médiocrité
+                abordable et médiocrité coûteuse. Un travail créatif véritablement excellent —
+                qui pense stratégiquement et s&apos;exécute magnifiquement — était réservé aux
+                clients avec des budgets de major label ou Fortune 500.
               </p>
               <p className="text-obsidian-silver text-base leading-relaxed">
-                We built OBSIDIAN to close that gap. Not by lowering the standard, but by
-                operating with greater intelligence and precision than agencies three times
-                our size. We take on fewer projects, invest more in each one, and deliver
-                work that performs at a level that justifies the investment.
+                Nous avons construit OBSIDIAN pour combler cet écart. Pas en abaissant le
+                standard, mais en opérant avec plus d&apos;intelligence et de précision que des
+                agences trois fois notre taille. Nous prenons moins de projets, investissons
+                davantage dans chacun, et livrons un travail qui performe à un niveau qui
+                justifie l&apos;investissement.
               </p>
             </FadeIn>
             <FadeIn delay={0.2}>
               <div className="space-y-0 border-t border-obsidian-border">
                 {[
-                  ["Founded", "2019"],
-                  ["Projects Completed", "150+"],
-                  ["Countries Active", "6"],
+                  ["Fondé en", "2019"],
+                  ["Projets réalisés", "150+"],
+                  ["Pays actifs", "6"],
                   ["Disciplines", "4"],
-                  ["Team Members", "12 core"],
+                  ["Membres d'équipe", "12 permanents"],
                 ].map(([label, value]) => (
                   <div
                     key={label}
@@ -127,8 +128,8 @@ export default function AboutPage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <FadeIn>
             <SectionHeader
-              label="Philosophy"
-              title="Four things we believe."
+              label="Philosophie"
+              title="Quatre choses en lesquelles nous croyons."
               align="center"
             />
           </FadeIn>
@@ -155,9 +156,9 @@ export default function AboutPage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <FadeIn>
             <SectionHeader
-              label="Methodology"
-              title="How we approach every project."
-              subtitle="A process built over years of doing what works and eliminating what doesn't."
+              label="Méthodologie"
+              title="Notre approche de chaque projet."
+              subtitle="Un processus construit au fil des années, en gardant ce qui fonctionne et en éliminant ce qui ne fonctionne pas."
             />
           </FadeIn>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
@@ -188,29 +189,29 @@ export default function AboutPage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <div className="max-w-3xl mx-auto text-center">
             <FadeIn>
-              <span className="section-label mb-8 inline-block">Why OBSIDIAN</span>
+              <span className="section-label mb-8 inline-block">Pourquoi OBSIDIAN</span>
             </FadeIn>
             <FadeIn delay={0.1}>
               <h2 className="heading-display text-4xl md:text-6xl text-obsidian-white mb-10">
-                We're not the right studio for everyone.
+                Nous ne sommes pas le bon studio pour tout le monde.
               </h2>
             </FadeIn>
             <FadeIn delay={0.2}>
               <p className="text-obsidian-silver text-lg leading-relaxed mb-6">
-                We're the right studio for clients who understand that creative work is an
-                investment, not an expense. Who know what they're building and are serious
-                about building it well. Who want a partner in the truest sense—not an order
-                taker.
+                Nous sommes le bon studio pour les clients qui comprennent que le travail
+                créatif est un investissement, pas une dépense. Qui savent ce qu&apos;ils
+                construisent et sont sérieux dans leur démarche. Qui veulent un partenaire
+                au sens plein du terme — pas un simple exécutant.
               </p>
               <p className="text-obsidian-silver text-lg leading-relaxed mb-12">
-                If that's you, the conversation will be immediate. If you're still working
-                out what you want, we're probably not the right fit yet—and we'd rather
-                tell you that now.
+                Si c&apos;est vous, la conversation sera immédiate. Si vous cherchez encore ce
+                que vous voulez, nous ne sommes probablement pas le bon choix pour le
+                moment — et nous préférons vous le dire maintenant.
               </p>
             </FadeIn>
             <FadeIn delay={0.3}>
               <Link href="/contact" className="btn-primary">
-                Let's Talk
+                Parlons-en
                 <ArrowIcon className="w-4 h-4" />
               </Link>
             </FadeIn>

@@ -48,9 +48,9 @@ export function ServicesPreview() {
           <div className="lg:w-2/5">
             <FadeIn>
               <SectionHeader
-                label="What We Do"
-                title="Built for impact, not imitation."
-                subtitle="Four disciplines. One obsession: making your audience feel something they cannot forget."
+                label="Ce que nous faisons"
+                title="Fait pour l'impact, pas pour l'imitation."
+                subtitle="Quatre disciplines. Une obsession : faire ressentir quelque chose d'inoubliable à votre audience."
               />
               <Link href="/services" className="btn-outline">
                 All Services

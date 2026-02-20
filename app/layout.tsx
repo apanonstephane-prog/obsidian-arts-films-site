@@ -20,30 +20,31 @@ export const metadata: Metadata = {
   },
   description: siteConfig.description,
   keywords: [
-    "music video production",
-    "commercial film",
-    "brand film",
-    "creative production studio",
-    "cinematic content",
-    "branding agency",
-    "visual storytelling",
-    "luxury creative agency",
+    "production clip musical",
+    "film publicitaire",
+    "film de marque",
+    "studio de production créative",
+    "contenu cinématographique",
+    "agence de branding",
+    "narration visuelle",
+    "agence créative luxe",
+    "OBSIDIAN Arts Films",
   ],
   authors: [{ name: "OBSIDIAN Arts & Films" }],
   creator: "OBSIDIAN Arts & Films",
   openGraph: {
     type: "website",
-    locale: "en_US",
+    locale: "fr_FR",
     url: siteConfig.url,
     title: siteConfig.name,
     description: siteConfig.description,
     siteName: siteConfig.name,
     images: [
       {
-        url: `${siteConfig.url}/og-image.jpg`,
+        url: `${siteConfig.url}/brand/og-image.jpg`,
         width: 1200,
         height: 630,
-        alt: siteConfig.name,
+        alt: "OBSIDIAN Arts & Films — Studio de production créative",
       },
     ],
   },
@@ -64,9 +65,8 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon-16x16.png",
-    apple: "/apple-touch-icon.png",
+    icon: "/brand/favicon.svg",
+    shortcut: "/brand/favicon.svg",
   },
 };
 
@@ -82,7 +82,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="fr" className={inter.variable}>
       <body className="bg-obsidian-black text-obsidian-white antialiased">
         <Navbar />
         <PageTransition>
