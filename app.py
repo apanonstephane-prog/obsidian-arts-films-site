@@ -7,12 +7,28 @@ Puis ouvre http://localhost:8501 dans ton navigateur
 """
 
 import os
+import asyncio
+import concurrent.futures
 import streamlit as st
 from openai import OpenAI
 from datetime import datetime
 from dotenv import load_dotenv
 
 load_dotenv()
+
+# ── Imports optionnels ─────────────────────────────────────────
+try:
+    from supabase import create_client
+    _SUPABASE_OK = True
+except ImportError:
+    _SUPABASE_OK = False
+
+try:
+    from mcp import ClientSession
+    from mcp.client.streamable_http import streamablehttp_client
+    _MCP_OK = True
+except ImportError:
+    _MCP_OK = False
 
 
 def _get_default_api_key() -> str:
@@ -21,6 +37,125 @@ def _get_default_api_key() -> str:
         return st.secrets.get("OPENROUTER_API_KEY", "")
     except Exception:
         return os.environ.get("OPENROUTER_API_KEY", "")
+
+
+# ============================================================
+# Supabase — persistance des conversations
+# ============================================================
+
+@st.cache_resource
+def _supabase():
+    if not _SUPABASE_OK:
+        return None
+    url = os.environ.get("SUPABASE_URL", "")
+    key = os.environ.get("SUPABASE_KEY", "")
+    try:
+        url = url or st.secrets.get("SUPABASE_URL", "")
+        key = key or st.secrets.get("SUPABASE_KEY", "")
+    except Exception:
+        pass
+    if url and key:
+        try:
+            return create_client(url, key)
+        except Exception:
+            pass
+    return None
+
+
+def _new_conversation(db, profil: dict) -> str:
+    try:
+        r = db.table("conversations").insert({
+            "title": f"Session {datetime.now().strftime('%d/%m %H:%M')}",
+            "user_profile": profil,
+        }).execute()
+        return r.data[0]["id"]
+    except Exception:
+        return ""
+
+
+def _save_msg(db, conv_id: str, role: str, content: str):
+    if not db or not conv_id:
+        return
+    try:
+        db.table("messages").insert({
+            "conversation_id": conv_id,
+            "role": role,
+            "content": content,
+        }).execute()
+    except Exception:
+        pass
+
+
+def _load_msgs(db, conv_id: str) -> list[dict]:
+    if not db or not conv_id:
+        return []
+    try:
+        r = (
+            db.table("messages")
+            .select("role, content")
+            .eq("conversation_id", conv_id)
+            .order("created_at")
+            .execute()
+        )
+        return r.data or []
+    except Exception:
+        return []
+
+
+def _recent_convs(db, limit: int = 8) -> list[dict]:
+    if not db:
+        return []
+    try:
+        r = (
+            db.table("conversations")
+            .select("id, title, created_at")
+            .order("created_at", desc=True)
+            .limit(limit)
+            .execute()
+        )
+        return r.data or []
+    except Exception:
+        return []
+
+
+# ============================================================
+# MCPdatagouv — enrichissement avec données officielles
+# ============================================================
+
+_MCP_URL = "https://mcp.data.gouv.fr/mcp"
+
+
+def enrich_with_datagouv(query: str) -> str:
+    """
+    Interroge data.gouv.fr via le serveur MCP officiel.
+    Retourne un bloc de contexte formaté, ou '' si indisponible.
+    """
+    if not _MCP_OK:
+        return ""
+
+    async def _search():
+        async with streamablehttp_client(_MCP_URL) as (read, write, _):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                result = await session.call_tool(
+                    "search_datasets",
+                    arguments={"query": query, "page_size": 3},
+                )
+                return "\n".join(
+                    item.text
+                    for item in result.content
+                    if hasattr(item, "text")
+                )
+
+    try:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+            raw = pool.submit(lambda: asyncio.run(_search())).result(timeout=10)
+        if raw and len(raw) > 40:
+            return f"\n\n## DONNÉES OFFICIELLES DATA.GOUV.FR\n{raw[:1500]}\n"
+    except Exception:
+        pass
+    return ""
+
 
 # ============================================================
 # Configuration de la page
@@ -111,8 +246,9 @@ Tes règles de travail :
 """
 
 
-def get_system_prompt(profil: dict) -> str:
-    return SYSTEM_PROMPT.format(**profil, date=datetime.now().strftime("%B %Y"))
+def get_system_prompt(profil: dict, extra: str = "") -> str:
+    base = SYSTEM_PROMPT.format(**profil, date=datetime.now().strftime("%B %Y"))
+    return base + extra
 
 
 # ============================================================
@@ -151,8 +287,10 @@ QUICK_QUERIES = {
 }
 
 # ============================================================
-# Sidebar — Profil & Clé API
+# Sidebar — Profil, Clé API, Historique
 # ============================================================
+db = _supabase()
+
 with st.sidebar:
     st.header("⚙️ Votre profil")
     st.caption("L'agent adapte ses recherches à ces informations.")
@@ -206,9 +344,24 @@ with st.sidebar:
         st.success("Clé configurée ✓")
 
     st.markdown("---")
-    if st.button("🗑️ Nouvelle conversation", use_container_width=True):
+    if st.button("🆕 Nouvelle conversation", use_container_width=True):
         st.session_state.pop("messages", None)
+        st.session_state.pop("conversation_id", None)
         st.rerun()
+
+    # ── Historique des conversations (Supabase) ───────────────
+    if db:
+        convs = _recent_convs(db)
+        if convs:
+            st.markdown("---")
+            st.caption("📂 Conversations récentes")
+            for c in convs:
+                if st.button(c["title"], key=c["id"], use_container_width=True):
+                    st.session_state.conversation_id = c["id"]
+                    st.session_state.messages = _load_msgs(db, c["id"])
+                    st.rerun()
+    else:
+        st.caption("💾 Supabase non configuré — historique local uniquement")
 
 profil = {
     "secteur": secteur,
@@ -279,14 +432,29 @@ if query:
         )
         st.stop()
 
-    # Afficher le message utilisateur
+    # Créer la conversation Supabase au premier message
+    if db and "conversation_id" not in st.session_state:
+        st.session_state.conversation_id = _new_conversation(db, profil)
+
+    # Afficher et sauvegarder le message utilisateur
     with st.chat_message("user"):
         st.markdown(query)
     st.session_state.messages.append({"role": "user", "content": query})
+    _save_msg(db, st.session_state.get("conversation_id", ""), "user", query)
 
-    # Construire les messages pour l'API
+    # ── Enrichissement MCPdatagouv ────────────────────────────
+    datagouv_ctx = ""
+    if _MCP_OK:
+        with st.spinner("📡 Consultation data.gouv.fr (données officielles)..."):
+            datagouv_ctx = enrich_with_datagouv(
+                f"aides entreprises subventions {query[:80]}"
+            )
+        if datagouv_ctx:
+            st.caption("✅ Données officielles data.gouv.fr intégrées")
+
+    # ── Appel LLM (streaming) ─────────────────────────────────
     api_messages = [
-        {"role": "system", "content": get_system_prompt(profil)},
+        {"role": "system", "content": get_system_prompt(profil, datagouv_ctx)},
         *[
             {"role": m["role"], "content": m["content"]}
             for m in st.session_state.messages
@@ -337,8 +505,12 @@ if query:
         status_area.empty()
         text_area.markdown(full_text)
 
-    # Sauvegarder dans l'historique de conversation
+    # Sauvegarder la réponse
     if full_text:
-        st.session_state.messages.append(
-            {"role": "assistant", "content": full_text}
+        st.session_state.messages.append({"role": "assistant", "content": full_text})
+        _save_msg(
+            db,
+            st.session_state.get("conversation_id", ""),
+            "assistant",
+            full_text,
         )
