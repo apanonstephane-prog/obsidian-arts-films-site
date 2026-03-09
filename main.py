@@ -139,7 +139,6 @@ def stream_response(client: OpenAI, messages: list) -> str:
         model="meta-llama/llama-3.3-70b-instruct:free",
         messages=messages,
         stream=True,
-        extra_body={"plugins": [{"id": "web", "max_results": 5}]},
     )
 
     print("\n\033[36m[🔍 Recherche web en cours...]\033[0m\n", flush=True)

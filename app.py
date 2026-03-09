@@ -479,7 +479,6 @@ if query:
                 model="meta-llama/llama-3.3-70b-instruct:free",
                 messages=api_messages,
                 stream=True,
-                extra_body={"plugins": [{"id": "web", "max_results": 5}]},
             )
 
             for chunk in stream:
