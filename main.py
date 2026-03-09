@@ -13,7 +13,7 @@ Usage :
 
 import os
 import sys
-import anthropic
+from openai import OpenAI
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -110,7 +110,7 @@ Profil de l'entrepreneur accompagné :
 ---
 
 Tes règles de travail :
-1. Utilise web_search pour vérifier les informations actuelles (montants 2025-2026, deadlines, critères)
+1. Recherche activement les informations actuelles (montants 2025-2026, deadlines, critères)
 2. Évalue chaque aide : ✅ Éligible maintenant | ⚠️ Sous conditions | ❌ Pas encore accessible
 3. Pour chaque aide → nom officiel, montant, critères précis, deadline, lien officiel, étapes concrètes
 4. Sois honnête : signale quand une aide nécessite une SAS/SARL
@@ -132,84 +132,50 @@ def sep(title: str = "", width: int = 62) -> None:
         print("\n" + "═" * width)
 
 
-def stream_response(client: anthropic.Anthropic, messages: list) -> anthropic.types.Message:
-    """Lance une requête en streaming et retourne le message final."""
+def stream_response(client: OpenAI, messages: list) -> str:
+    """Lance une requête en streaming et retourne le texte complet."""
 
-    with client.messages.stream(
-        model="claude-opus-4-6",
-        max_tokens=8000,
-        thinking={"type": "adaptive"},
-        system=get_system_prompt(),
-        tools=[
-            {"type": "web_search_20260209", "name": "web_search"},
-            {"type": "web_fetch_20260209", "name": "web_fetch"},
-        ],
+    stream = client.chat.completions.create(
+        model="deepseek/deepseek-r1:free",
         messages=messages,
-    ) as stream:
-        current_block = None
-
-        for event in stream:
-            if event.type == "content_block_start":
-                current_block = event.content_block.type
-                if current_block == "thinking":
-                    print("\033[90m[💭 Analyse...]\033[0m", flush=True)
-                elif current_block == "server_tool_use":
-                    print("\n\033[36m[🔍 Recherche web...]\033[0m", flush=True)
-
-            elif event.type == "content_block_delta":
-                if event.delta.type == "text_delta":
-                    print(event.delta.text, end="", flush=True)
-
-            elif event.type == "content_block_stop":
-                if current_block == "thinking":
-                    print("\033[90m[✓]\033[0m\n", flush=True)
-
-        return stream.get_final_message()
-
-
-def run_query(client: anthropic.Anthropic, query: str) -> anthropic.types.Message:
-    """Exécute une requête avec gestion automatique du pause_turn."""
-    messages = [{"role": "user", "content": query}]
-    final = None
-
-    for _ in range(5):  # max 5 continuations pour les longues recherches
-        final = stream_response(client, messages)
-
-        if final.stop_reason == "end_turn":
-            break
-
-        if final.stop_reason == "pause_turn":
-            print("\n\033[90m[Recherche qui continue...]\033[0m\n", flush=True)
-            messages = [
-                {"role": "user", "content": query},
-                {"role": "assistant", "content": final.content},
-            ]
-            continue
-
-        break
-
-    return final
-
-
-def extract_text(message: anthropic.types.Message) -> str:
-    """Extrait uniquement le texte d'un message (sans les blocs de pensée/outils)."""
-    return "".join(
-        block.text
-        for block in message.content
-        if hasattr(block, "type") and block.type == "text"
+        stream=True,
+        extra_body={"plugins": [{"id": "web", "max_results": 5}]},
     )
 
+    print("\n\033[36m[🔍 Recherche web en cours...]\033[0m\n", flush=True)
+    full_text = ""
+    first_chunk = True
 
-def interactive_session(client: anthropic.Anthropic, initial_query: str) -> None:
+    for chunk in stream:
+        if chunk.choices and chunk.choices[0].delta.content:
+            text = chunk.choices[0].delta.content
+            if first_chunk:
+                first_chunk = False
+            print(text, end="", flush=True)
+            full_text += text
+
+    print()
+    return full_text
+
+
+def run_query(client: OpenAI, query: str) -> str:
+    """Exécute une requête et retourne le texte de la réponse."""
+    messages = [
+        {"role": "system", "content": get_system_prompt()},
+        {"role": "user", "content": query},
+    ]
+    return stream_response(client, messages)
+
+
+def interactive_session(client: OpenAI, initial_query: str) -> None:
     """Lance la session complète : recherche initiale + questions de suivi."""
 
     sep()
-    print("  ⏳ Recherche en cours (1-3 min selon la profondeur)...")
+    print("  ⏳ Recherche en cours...")
     sep()
     print()
 
-    final = run_query(client, initial_query)
-    initial_text = extract_text(final)
+    initial_text = run_query(client, initial_query)
 
     sep("✅ RECHERCHE TERMINÉE")
     print()
@@ -218,8 +184,9 @@ def interactive_session(client: anthropic.Anthropic, initial_query: str) -> None
         "ou tapez 'quit' pour terminer.\033[0m"
     )
 
-    # Historique de conversation (texte uniquement pour les tours suivants)
+    # Historique de conversation
     conv = [
+        {"role": "system", "content": get_system_prompt()},
         {"role": "user", "content": initial_query},
         {"role": "assistant", "content": initial_text or "Recherche effectuée."},
     ]
@@ -238,8 +205,7 @@ def interactive_session(client: anthropic.Anthropic, initial_query: str) -> None
         conv.append({"role": "user", "content": followup})
         print("\n\033[1mAgent :\033[0m ", flush=True)
 
-        response = stream_response(client, conv)
-        response_text = extract_text(response)
+        response_text = stream_response(client, conv)
 
         if response_text:
             conv.append({"role": "assistant", "content": response_text})
@@ -318,14 +284,17 @@ MENU = {
 
 
 def main() -> None:
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    api_key = os.environ.get("OPENROUTER_API_KEY")
     if not api_key:
-        print("\n❌  ANTHROPIC_API_KEY non définie.")
+        print("\n❌  OPENROUTER_API_KEY non définie.")
         print("    Copiez .env.example en .env et ajoutez votre clé.")
-        print("    → https://console.anthropic.com/\n")
+        print("    → https://openrouter.ai/\n")
         sys.exit(1)
 
-    client = anthropic.Anthropic(api_key=api_key)
+    client = OpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key=api_key,
+    )
 
     # Raccourcis ligne de commande
     if len(sys.argv) > 1:

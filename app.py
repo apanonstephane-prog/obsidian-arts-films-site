@@ -8,7 +8,7 @@ Puis ouvre http://localhost:8501 dans ton navigateur
 
 import os
 import streamlit as st
-import anthropic
+from openai import OpenAI
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -93,7 +93,7 @@ Profil de l'entrepreneur accompagné :
 ---
 
 Tes règles de travail :
-1. Utilise web_search pour vérifier les informations actuelles (montants 2025-2026, deadlines)
+1. Recherche activement les informations actuelles (montants 2025-2026, deadlines)
 2. Évalue chaque aide : ✅ Éligible maintenant | ⚠️ Sous conditions | ❌ Pas encore accessible
 3. Pour chaque aide → nom officiel, montant, critères, deadline, lien officiel, étapes concrètes
 4. Sois honnête : signale clairement quand une aide nécessite une SAS/SARL
@@ -179,19 +179,19 @@ with st.sidebar:
     )
 
     st.markdown("---")
-    st.header("🔑 Clé API Anthropic")
+    st.header("🔑 Clé API OpenRouter")
     api_key = st.text_input(
         "Clé API",
-        value=os.environ.get("ANTHROPIC_API_KEY", ""),
+        value=os.environ.get("OPENROUTER_API_KEY", ""),
         type="password",
-        placeholder="sk-ant-...",
-        help="Créez votre compte et obtenez une clé sur console.anthropic.com",
+        placeholder="sk-or-...",
+        help="Créez votre compte gratuit sur openrouter.ai",
     )
 
     if not api_key:
         st.warning("⚠️ Ajoutez votre clé API pour commencer")
         st.markdown(
-            "[→ Obtenir une clé API](https://console.anthropic.com/)",
+            "[→ Obtenir une clé API gratuite](https://openrouter.ai/)",
             unsafe_allow_html=False,
         )
     else:
@@ -242,7 +242,7 @@ if not st.session_state.messages:
             "**aides et subventions françaises** pour entrepreneurs et startups numériques.\n\n"
             "**Comment ça marche :**\n"
             "1. Renseignez votre profil dans la barre latérale ←\n"
-            "2. Entrez votre clé API Anthropic (console.anthropic.com)\n"
+            "2. Entrez votre clé API OpenRouter (openrouter.ai — gratuit)\n"
             "3. Cliquez sur un bouton ou posez votre question\n\n"
             "Je recherche en temps réel sur tous les sites officiels (Bpifrance, "
             "Région Occitanie, aides-entreprises.fr...) et vous donne les informations "
@@ -266,8 +266,8 @@ query = query_from_button or user_input
 if query:
     if not api_key:
         st.error(
-            "⚠️ Ajoutez votre clé API Anthropic dans la barre latérale pour utiliser l'agent.\n\n"
-            "→ Obtenez une clé gratuite sur [console.anthropic.com](https://console.anthropic.com/)"
+            "⚠️ Ajoutez votre clé API OpenRouter dans la barre latérale pour utiliser l'agent.\n\n"
+            "→ Obtenez une clé gratuite sur [openrouter.ai](https://openrouter.ai/)"
         )
         st.stop()
 
@@ -278,78 +278,44 @@ if query:
 
     # Construire les messages pour l'API
     api_messages = [
-        {"role": m["role"], "content": m["content"]}
-        for m in st.session_state.messages
+        {"role": "system", "content": get_system_prompt(profil)},
+        *[
+            {"role": m["role"], "content": m["content"]}
+            for m in st.session_state.messages
+        ],
     ]
 
-    client = anthropic.Anthropic(api_key=api_key)
+    client = OpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key=api_key,
+    )
 
     with st.chat_message("assistant"):
         status_area = st.empty()
         text_area = st.empty()
 
         full_text = ""
-        search_count = 0
-        current_block = None
-        final = None
+        searching = True
+        status_area.caption("🔍 Recherche web en cours...")
 
-        # Boucle agentique — gère pause_turn pour les longues recherches
-        for attempt in range(5):
-            try:
-                with client.messages.stream(
-                    model="claude-opus-4-6",
-                    max_tokens=8000,
-                    thinking={"type": "adaptive"},
-                    system=get_system_prompt(profil),
-                    tools=[
-                        {"type": "web_search_20260209", "name": "web_search"},
-                        {"type": "web_fetch_20260209", "name": "web_fetch"},
-                    ],
-                    messages=api_messages,
-                ) as stream:
-                    for event in stream:
-                        if event.type == "content_block_start":
-                            current_block = event.content_block.type
-                            if current_block == "thinking":
-                                status_area.caption("💭 Analyse de votre profil en cours...")
-                            elif current_block == "server_tool_use":
-                                search_count += 1
-                                status_area.caption(
-                                    f"🔍 Recherche web #{search_count} en cours..."
-                                )
-                            elif current_block == "text":
-                                status_area.empty()
+        try:
+            stream = client.chat.completions.create(
+                model="deepseek/deepseek-r1:free",
+                messages=api_messages,
+                stream=True,
+                extra_body={"plugins": [{"id": "web", "max_results": 5}]},
+            )
 
-                        elif event.type == "content_block_delta":
-                            if event.delta.type == "text_delta":
-                                full_text += event.delta.text
-                                text_area.markdown(full_text + "▌")
+            for chunk in stream:
+                if chunk.choices and chunk.choices[0].delta.content:
+                    if searching:
+                        status_area.empty()
+                        searching = False
+                    full_text += chunk.choices[0].delta.content
+                    text_area.markdown(full_text + "▌")
 
-                        elif event.type == "content_block_stop":
-                            if current_block in ("thinking", "server_tool_use"):
-                                status_area.empty()
-
-                    final = stream.get_final_message()
-
-            except anthropic.APIError as e:
-                st.error(f"Erreur API : {e}")
-                break
-
-            if not final:
-                break
-
-            if final.stop_reason == "end_turn":
-                break
-
-            if final.stop_reason == "pause_turn":
-                # La recherche continue — on ré-envoie pour poursuivre
-                api_messages.append(
-                    {"role": "assistant", "content": final.content}
-                )
-                status_area.caption("🔍 Recherche approfondie en cours...")
-                continue
-
-            break
+        except Exception as e:
+            st.error(f"Erreur API : {e}")
 
         # Affichage final propre (sans curseur clignotant)
         status_area.empty()
