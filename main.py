@@ -136,7 +136,7 @@ def stream_response(client: OpenAI, messages: list) -> str:
     """Lance une requête en streaming et retourne le texte complet."""
 
     stream = client.chat.completions.create(
-        model="deepseek/deepseek-r1:free",
+        model="meta-llama/llama-3.3-70b-instruct:free",
         messages=messages,
         stream=True,
         extra_body={"plugins": [{"id": "web", "max_results": 5}]},
