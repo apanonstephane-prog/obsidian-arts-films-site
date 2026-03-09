@@ -14,6 +14,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
+def _get_default_api_key() -> str:
+    """Lit la clé depuis st.secrets (Streamlit Cloud) ou l'environnement local."""
+    try:
+        return st.secrets.get("OPENROUTER_API_KEY", "")
+    except Exception:
+        return os.environ.get("OPENROUTER_API_KEY", "")
+
 # ============================================================
 # Configuration de la page
 # ============================================================
@@ -182,7 +190,7 @@ with st.sidebar:
     st.header("🔑 Clé API OpenRouter")
     api_key = st.text_input(
         "Clé API",
-        value=os.environ.get("OPENROUTER_API_KEY", ""),
+        value=_get_default_api_key(),
         type="password",
         placeholder="sk-or-...",
         help="Créez votre compte gratuit sur openrouter.ai",
@@ -307,15 +315,23 @@ if query:
             )
 
             for chunk in stream:
-                if chunk.choices and chunk.choices[0].delta.content:
+                if not chunk.choices:
+                    continue
+                delta_content = chunk.choices[0].delta.content
+                if delta_content:
                     if searching:
                         status_area.empty()
                         searching = False
-                    full_text += chunk.choices[0].delta.content
+                    full_text += delta_content
                     text_area.markdown(full_text + "▌")
 
         except Exception as e:
-            st.error(f"Erreur API : {e}")
+            status_area.empty()
+            st.error(f"**Erreur API OpenRouter :** {e}")
+            st.info(
+                "Vérifiez que votre clé API est correcte et que vous avez du crédit "
+                "ou utilisez un modèle gratuit. → [openrouter.ai](https://openrouter.ai/)"
+            )
 
         # Affichage final propre (sans curseur clignotant)
         status_area.empty()
