@@ -2,14 +2,15 @@
 """
 AdminSearch — Agent Aides & Subventions Françaises
 ===================================================
-Lancer avec : streamlit run app.py
-Puis ouvre http://localhost:8501 dans ton navigateur
+Architecture : MIT Fluid Interfaces · Stanford HAI · Harvard HCI (2026)
+Lancer avec  : streamlit run app.py
 """
 
 import os
 import io
 import json
 import re
+import hashlib
 import asyncio
 import concurrent.futures
 import streamlit as st
@@ -17,6 +18,7 @@ from openai import OpenAI
 from datetime import datetime
 from dotenv import load_dotenv
 
+# ── PDF (optionnel) ────────────────────────────────────────────
 try:
     import pdfplumber
     _PDF_READ_OK = True
@@ -37,13 +39,14 @@ except ImportError:
 
 load_dotenv()
 
-# ── Imports optionnels ─────────────────────────────────────────
+# ── Supabase (optionnel) ──────────────────────────────────────
 try:
     from supabase import create_client
     _SUPABASE_OK = True
 except ImportError:
     _SUPABASE_OK = False
 
+# ── MCP data.gouv.fr (optionnel) ──────────────────────────────
 try:
     from mcp import ClientSession
     from mcp.client.streamable_http import streamablehttp_client
@@ -52,8 +55,11 @@ except ImportError:
     _MCP_OK = False
 
 
+# ============================================================
+# Config
+# ============================================================
+
 def _get_default_api_key() -> str:
-    """Lit la clé depuis st.secrets (Streamlit Cloud) ou l'environnement local."""
     try:
         return st.secrets.get("GROQ_API_KEY", "")
     except Exception:
@@ -140,17 +146,13 @@ def _recent_convs(db, limit: int = 8) -> list[dict]:
 
 
 # ============================================================
-# MCPdatagouv — enrichissement avec données officielles
+# MCP data.gouv.fr — enrichissement live
 # ============================================================
 
 _MCP_URL = "https://mcp.data.gouv.fr/mcp"
 
 
 def enrich_with_datagouv(query: str) -> str:
-    """
-    Interroge data.gouv.fr via le serveur MCP officiel.
-    Retourne un bloc de contexte formaté, ou '' si indisponible.
-    """
     if not _MCP_OK:
         return ""
 
@@ -163,9 +165,7 @@ def enrich_with_datagouv(query: str) -> str:
                     arguments={"query": query, "page_size": 3},
                 )
                 return "\n".join(
-                    item.text
-                    for item in result.content
-                    if hasattr(item, "text")
+                    item.text for item in result.content if hasattr(item, "text")
                 )
 
     try:
@@ -183,23 +183,21 @@ def enrich_with_datagouv(query: str) -> str:
 # ============================================================
 
 def extract_pdf_text(pdf_bytes: bytes) -> str:
-    """Extrait le texte d'un PDF avec pdfplumber."""
     if not _PDF_READ_OK:
         return ""
     try:
         with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
-            pages_text = []
+            pages = []
             for i, page in enumerate(pdf.pages):
                 text = page.extract_text() or ""
                 if text.strip():
-                    pages_text.append(f"[Page {i+1}]\n{text}")
-            return "\n\n".join(pages_text)
+                    pages.append(f"[Page {i+1}]\n{text}")
+            return "\n\n".join(pages)
     except Exception:
         return ""
 
 
 def detect_pdf_fields(pdf_bytes: bytes) -> dict:
-    """Détecte les champs d'un formulaire PDF avec pypdf."""
     if not _PYPDF_OK:
         return {}
     try:
@@ -207,24 +205,21 @@ def detect_pdf_fields(pdf_bytes: bytes) -> dict:
         fields = reader.get_fields()
         if not fields:
             return {}
-        return {
-            name: (field.value or "") for name, field in fields.items()
-        }
+        return {name: (field.value or "") for name, field in fields.items()}
     except Exception:
         return {}
 
 
 def ai_fill_fields(fields: dict, profil: dict, pdf_text: str, api_key: str) -> dict:
-    """Demande à l'IA de générer les valeurs pour chaque champ du formulaire."""
     champs_list = json.dumps(list(fields.keys()), ensure_ascii=False, indent=2)
     prompt = (
-        "Tu es un expert en dossiers de subventions et aides françaises.\n\n"
-        f"Profil de l'entrepreneur :\n{json.dumps(profil, ensure_ascii=False, indent=2)}\n\n"
-        f"Contenu du formulaire PDF (extrait) :\n{pdf_text[:4000]}\n\n"
+        "Tu es un expert en dossiers de subventions françaises.\n\n"
+        f"Profil :\n{json.dumps(profil, ensure_ascii=False, indent=2)}\n\n"
+        f"Contenu PDF :\n{pdf_text[:4000]}\n\n"
         f"Champs à remplir :\n{champs_list}\n\n"
-        "Génère les valeurs adaptées pour chaque champ selon le profil. "
-        "Réponds UNIQUEMENT avec un objet JSON valide, sans commentaires ni markdown. "
-        "Exemple : {\"nom\": \"Dupont\", \"activite\": \"Développement web\"}"
+        "Génère les valeurs pour chaque champ selon le profil. "
+        "Réponds UNIQUEMENT avec un objet JSON valide, sans commentaires ni markdown.\n"
+        'Exemple : {"nom": "Dupont", "secteur": "Développement web"}'
     )
     try:
         client = OpenAI(base_url="https://api.groq.com/openai/v1", api_key=api_key)
@@ -243,7 +238,6 @@ def ai_fill_fields(fields: dict, profil: dict, pdf_text: str, api_key: str) -> d
 
 
 def fill_pdf(pdf_bytes: bytes, fill_values: dict) -> bytes | None:
-    """Remplit les champs du formulaire PDF et retourne les bytes du PDF rempli."""
     if not _PDF_FILL_OK or not fill_values:
         return None
     try:
@@ -256,8 +250,53 @@ def fill_pdf(pdf_bytes: bytes, fill_values: dict) -> bytes | None:
 
 
 # ============================================================
-# Configuration de la page
+# Trust rendering — Principe 3 (Stanford TCMM) + Principe 6 (CLT)
 # ============================================================
+
+def render_response_with_trust(text: str, key_prefix: str = ""):
+    """
+    Principe 3 (Stanford) : signaux de confiance visuels [CONFIRMÉ/À VÉRIFIER/NON VÉRIFIÉ]
+    Principe 6 (MIT CLT)  : PROCHAINE ÉTAPE en boîte verte distincte
+    """
+    # Extraire la section "PROCHAINE ÉTAPE"
+    next_step = ""
+    main_text = text
+    match = re.search(
+        r"##\s*PROCHAINE ÉTAPE RECOMMANDÉE\s*\n(.*?)(?=\n##|\Z)",
+        text, re.DOTALL | re.IGNORECASE
+    )
+    if match:
+        next_step = match.group(1).strip()
+        main_text = text[:match.start()].strip()
+
+    # Tags de confiance → badges visuels
+    main_text = main_text.replace("[CONFIRMÉ]", "🟢 **[CONFIRMÉ]**")
+    main_text = main_text.replace("[À VÉRIFIER]", "🟡 **[À VÉRIFIER]**")
+    main_text = main_text.replace("[NON VÉRIFIÉ]", "⚪ **[NON VÉRIFIÉ]**")
+
+    st.markdown(main_text)
+
+    # Prochaine étape en call-to-action vert (Principe 6)
+    if next_step:
+        st.success(f"**Prochaine étape →** {next_step}")
+
+    # Micro-feedback (Stanford Trustworthy AI Lab — Principe 8)
+    fb1, fb2, _ = st.columns([1, 1, 10])
+    with fb1:
+        if st.button("👍", key=f"{key_prefix}_up", help="Réponse utile"):
+            st.toast("Merci pour votre retour !")
+    with fb2:
+        if st.button("⚠️", key=f"{key_prefix}_flag", help="Signaler une imprécision"):
+            st.warning(
+                "Merci. Les montants et délais évoluent — "
+                "vérifiez toujours sur le site officiel avant de soumettre."
+            )
+
+
+# ============================================================
+# Page config
+# ============================================================
+
 st.set_page_config(
     page_title="AdminSearch — Aides Françaises",
     page_icon="🇫🇷",
@@ -265,133 +304,123 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+
 # ============================================================
-# Système prompt
+# System prompt — calibré MIT/Stanford/Harvard
 # ============================================================
-SYSTEM_PROMPT = """Tu es un expert en financement public français, spécialisé dans les aides aux créateurs \
-d'entreprise, startups et entrepreneurs du numérique.
 
-Tu maîtrises et recherches activement tous les dispositifs suivants :
+SYSTEM_PROMPT = """Tu es AdminSearch, expert en financement public français pour entrepreneurs et startups numériques.
+Connaissance : dispositifs 2024-2026. Pour les montants exacts et deadlines, recommande de vérifier sur le site officiel.
 
-## AIDES IMMÉDIATES (auto-entrepreneur)
-- ACRE : exonération partielle des cotisations sociales (1ère année, jusqu'à ~50%)
-- NACRE : accompagnement + prêt à taux zéro (0%) jusqu'à 8 000€
-- ARCE : si ancien demandeur d'emploi → 45% des droits ARE restants en capital
-- Maintien ARE : cumul allocation chômage + revenus auto-entrepreneur
-- Micro-crédit ADIE : jusqu'à 12 000€ pour auto-entrepreneurs
+## DISPOSITIFS MAÎTRISÉS
 
-## AIDES BPIFRANCE & ÉTAT
-- Bourse French Tech (10k–30k€, nécessite SAS/SARL)
-- i-Lab (jusqu'à 600k€, deep tech / innovation de rupture)
-- i-Nov (jusqu'à 600k€, startups innovantes)
-- Prêt d'amorçage / Prêt création entreprise Bpifrance
-- Pass French Tech (accompagnement accéléré)
-- CIR / CII : Crédit Impôt Recherche / Innovation
-- JEI / JEC : Jeune Entreprise Innovante / Créative
+### Aides immédiates (auto-entrepreneur)
+- ACRE : exonération ~50% cotisations sociales, 1ère année
+- NACRE : accompagnement + prêt taux zéro jusqu'à 8 000€
+- ARCE : si chômeur → 45% des droits ARE en capital
+- Maintien ARE : cumul allocation + revenus auto-entrepreneur
+- Micro-crédit ADIE : jusqu'à 12 000€
 
-## AIDES RÉGION OCCITANIE & TOULOUSE
+### Bpifrance & État
+- Bourse French Tech : 10k–30k€ (nécessite SAS/SARL)
+- i-Lab : jusqu'à 600k€ (deep tech)
+- i-Nov : jusqu'à 600k€ (startups innovantes)
+- Prêt d'amorçage / Prêt création Bpifrance
+- Pass French Tech, CIR/CII, JEI/JEC
+
+### Occitanie & Toulouse
 - ADI Occitanie : accompagnement + prêts
-- Région Occitanie : FREC, dispositifs numérique, chèques innovation
-- Toulouse Métropole : aides à la création d'activité
-- French Tech Toulouse : accompagnement, mise en réseau, label
-- CCI Occitanie / CCI Toulouse : chèques conseil, accompagnement
-- Initiative Grands Toulouse : prêts d'honneur 0% (jusqu'à 30k€)
-- Réseau Entreprendre Occitanie : prêts d'honneur 0% (jusqu'à 50k€)
-- Cap'Innov Occitanie, Village by CA Toulouse
+- Région Occitanie : FREC, chèques innovation numérique
+- French Tech Toulouse, CCI Occitanie/Toulouse
+- Initiative Grands Toulouse : prêts d'honneur 0% jusqu'à 30k€
+- Réseau Entreprendre Occitanie : prêts d'honneur 0% jusqu'à 50k€
 
-## CONCOURS ET PRIX
-- Concours i-Lab Bpifrance (annuel, jusqu'à 600k€)
-- Challenge French Tech
-- Prix Pépite (étudiant-entrepreneur)
-- Tremplins du Numérique
-- Talents Occitanie / Étoiles de l'Économie
-- Grand Prix Innovation Toulouse
-- Concours sectoriels (Syntec Numérique, etc.)
+### Concours
+- i-Lab Bpifrance, Challenge French Tech, Prix Pépite
+- Tremplins du Numérique, Talents Occitanie, Grand Prix Innovation Toulouse
 
-## AIDES EUROPÉENNES
-- FEDER Occitanie (géré en région)
-- FSE+ (Fonds Social Européen)
-- Horizon Europe (projets R&D, consortium)
-- EIC Accelerator (jusqu'à 2,5M€ + equity)
-- Digital Europe Programme
-
-## PLATEFORMES DE RÉFÉRENCE
-- aides-entreprises.fr, bpifrance-creation.fr
-- occitanie.fr → aides aux entreprises
-- lafrenchtech.com, guichet-entreprises.fr
+### Europe
+- FEDER Occitanie, FSE+, Horizon Europe, EIC Accelerator (jusqu'à 2,5M€)
 
 ---
 
-Profil de l'entrepreneur accompagné :
+Profil accompagné :
 - Secteur : {secteur}
 - Stade : {stade}
 - Localisation : {localisation}
-- Statut juridique : {statut}
+- Statut : {statut}
 - Activité : {activite}
 - Objectif : {objectif}
-- Date actuelle : {date}
+- Date : {date}
 
 ---
 
-Tes règles de travail :
-1. Recherche activement les informations actuelles (montants 2025-2026, deadlines)
-2. Évalue chaque aide : ✅ Éligible maintenant | ⚠️ Sous conditions | ❌ Pas encore accessible
-3. Pour chaque aide → nom officiel, montant, critères, deadline, lien officiel, étapes concrètes
-4. Sois honnête : signale clairement quand une aide nécessite une SAS/SARL
-5. Indique systématiquement ce qu'un changement de statut apporterait
-6. Classe par priorité : accessibilité immédiate > impact financier > facilité
-7. Pour les dossiers : adapte le contenu aux critères exacts de l'appel à projets
+## RÈGLES OBLIGATOIRES
+
+1. **Tag de confiance obligatoire** sur chaque aide :
+   - [CONFIRMÉ] : programme permanent, critères stables et certains
+   - [À VÉRIFIER] : programme cyclique/régional, conditions susceptibles d'avoir changé
+   - [NON VÉRIFIÉ] : information potentiellement obsolète ou incertaine
+
+2. **Format standard** pour chaque aide :
+   **[TAG] Nom de l'aide** — Montant | Critère clé | Deadline si connue
+   Lien : https://...
+   Démarche : étape 1 → étape 2 → étape 3
+
+3. **Éligibilité** : ✅ Maintenant | ⚠️ Sous conditions | ❌ Pas accessible
+
+4. Signale explicitement les aides nécessitant un changement de statut
+
+5. Classe par priorité : accessibilité immédiate > impact financier > facilité dossier
+
+6. Pour les montants/deadlines exacts : recommande toujours de vérifier sur le site officiel
+
+7. **OBLIGATOIRE — dernière section de chaque réponse** :
+## PROCHAINE ÉTAPE RECOMMANDÉE
+[1 action concrète · 1 contact ou lien direct · deadline si applicable — 3 lignes max]
 """
 
 
 def get_system_prompt(profil: dict, extra: str = "") -> str:
-    base = SYSTEM_PROMPT.format(**profil, date=datetime.now().strftime("%B %Y"))
-    return base + extra
+    return SYSTEM_PROMPT.format(**profil, date=datetime.now().strftime("%B %Y")) + extra
 
 
 # ============================================================
 # Actions rapides
 # ============================================================
+
 QUICK_QUERIES = {
     "🔍 Toutes les aides": (
-        "Effectue une recherche exhaustive de TOUTES les aides, subventions, prêts d'honneur, "
-        "exonérations, concours et dispositifs disponibles pour mon profil. "
-        "Structure ta réponse :\n\n"
-        "## 1. AIDES IMMÉDIATES (éligible maintenant)\n"
-        "## 2. AIDES SOUS CONDITIONS\n"
-        "## 3. CONCOURS & APPELS À PROJETS (6 prochains mois)\n"
-        "## 4. AIDES FUTURES (si changement de statut)\n"
+        "Recherche exhaustive de TOUTES les aides pour mon profil.\n\n"
+        "Structure :\n## 1. AIDES IMMÉDIATES\n## 2. SOUS CONDITIONS\n"
+        "## 3. CONCOURS (6 prochains mois)\n## 4. FUTURES (si changement statut)\n"
         "## 5. PLAN D'ACTION PRIORITAIRE\n\n"
-        "Pour chaque aide : nom officiel, montant, critères précis, deadline, lien officiel, démarches."
+        "Pour chaque aide : [TAG CONFIANCE], montant, critères, deadline, lien, démarches."
     ),
     "🏆 Concours en cours": (
-        "Recherche tous les concours, prix et appels à projets ouverts "
-        "ou s'ouvrant dans les 6 prochains mois, pour mon profil. "
-        "Inclus les concours nationaux ET régionaux Occitanie.\n\n"
-        "Pour chaque concours : nom, organisateur, dotation/prix, critères, "
-        "date limite de candidature, lien officiel."
+        "Tous les concours, prix et appels à projets ouverts ou s'ouvrant "
+        "dans les 6 prochains mois. Nationaux ET régionaux Occitanie.\n"
+        "Pour chaque : nom, organisateur, dotation, critères, date limite, lien."
     ),
     "💡 Aides immédiates": (
-        "Focus exclusif sur les aides accessibles MAINTENANT avec mon statut actuel. "
-        "Détaille avec les démarches concrètes pas à pas :\n"
-        "1. ACRE : montant exact, comment en bénéficier, durée\n"
-        "2. NACRE : éligibilité, montant, comment candidater\n"
-        "3. ARCE : suis-je potentiellement éligible ?\n"
-        "4. Prêts d'honneur accessibles sans créer une société\n"
-        "5. Aides ADI Occitanie, Région, CCI Toulouse\n"
-        "6. Micro-crédit ADIE : conditions et démarches\n\n"
-        "Pour chaque aide : montant, délais, contact, lien."
+        "Focus sur les aides accessibles MAINTENANT avec mon statut actuel. Détails pas à pas :\n"
+        "1. ACRE | 2. NACRE | 3. ARCE | 4. Prêts d'honneur sans société\n"
+        "5. ADI Occitanie / Région / CCI Toulouse | 6. Micro-crédit ADIE\n"
+        "Pour chaque : montant exact, démarches concrètes, contact, lien."
     ),
 }
 
+
 # ============================================================
-# Sidebar — Profil, Clé API, Historique
+# Sidebar — Profil · Clé API · Mode agent · Historique
 # ============================================================
+
 db = _supabase()
 
 with st.sidebar:
+    # ── Profil ────────────────────────────────────────────────
     st.header("⚙️ Votre profil")
-    st.caption("L'agent adapte ses recherches à ces informations.")
+    st.caption("L'agent adapte ses réponses à ces informations.")
 
     secteur = st.text_input(
         "Secteur d'activité",
@@ -404,7 +433,7 @@ with st.sidebar:
     localisation = st.text_input(
         "Localisation",
         value="Toulouse (Haute-Garonne, Occitanie)",
-        help="L'agent cherche aussi les aides nationales et européennes",
+        help="Inclut les aides nationales et européennes",
     )
     statut = st.selectbox(
         "Statut juridique",
@@ -423,31 +452,61 @@ with st.sidebar:
     )
 
     st.markdown("---")
+
+    # ── Clé API ───────────────────────────────────────────────
     st.header("🔑 Clé API Groq")
     api_key = st.text_input(
         "Clé API",
         value=_get_default_api_key(),
         type="password",
         placeholder="gsk_...",
-        help="Créez votre compte gratuit sur console.groq.com",
+        help="Gratuit sur console.groq.com",
     )
-
     if not api_key:
-        st.warning("⚠️ Ajoutez votre clé API pour commencer")
-        st.markdown(
-            "[→ Obtenir une clé API gratuite](https://console.groq.com/)",
-            unsafe_allow_html=False,
-        )
+        st.warning("⚠️ Clé API requise pour démarrer")
+        st.markdown("[→ Obtenir une clé gratuite](https://console.groq.com/)")
     else:
         st.success("Clé configurée ✓")
 
     st.markdown("---")
+
+    # ── Mode agent — Principe 7 (Agentic UX, Microsoft/Stanford) ──
+    st.header("🤖 Mode de l'agent")
+    agent_mode = st.radio(
+        "Niveau d'initiative",
+        [
+            "Conseiller — je décide",
+            "Assistant — je valide",
+            "Autonome — je vérifie",
+        ],
+        index=1,
+        label_visibility="collapsed",
+        help=(
+            "Conseiller : l'IA propose uniquement\n"
+            "Assistant : l'IA prépare, vous validez avant action\n"
+            "Autonome : l'IA agit directement + audit disponible"
+        ),
+    )
+    mode_desc = {
+        "Conseiller — je décide": "Chat uniquement · pas d'action automatique",
+        "Assistant — je valide": "Aperçu des valeurs avant remplissage PDF",
+        "Autonome — je vérifie": "Remplissage direct · audit accessible",
+    }
+    st.caption(mode_desc.get(agent_mode, ""))
+
+    st.markdown("---")
+
+    # ── Actions ───────────────────────────────────────────────
     if st.button("🆕 Nouvelle conversation", use_container_width=True):
-        st.session_state.pop("messages", None)
-        st.session_state.pop("conversation_id", None)
+        for k in [
+            "messages", "conversation_id",
+            "pdf_bytes", "pdf_text", "pdf_fields",
+            "pdf_name", "filled_pdf_bytes", "pdf_preview_vals",
+        ]:
+            st.session_state.pop(k, None)
         st.rerun()
 
-    # ── Historique des conversations (Supabase) ───────────────
+    # ── Historique Supabase ───────────────────────────────────
     if db:
         convs = _recent_convs(db)
         if convs:
@@ -461,6 +520,7 @@ with st.sidebar:
     else:
         st.caption("💾 Supabase non configuré — historique local uniquement")
 
+
 profil = {
     "secteur": secteur,
     "stade": stade,
@@ -470,13 +530,21 @@ profil = {
     "objectif": "Trouver des financements et développer mon activité",
 }
 
+# Hash du profil pour cache (Streamlit GenAI best practices)
+_profil_hash = hashlib.md5(
+    json.dumps(profil, sort_keys=True).encode()
+).hexdigest()[:8]
+
+
 # ============================================================
 # Zone principale
 # ============================================================
+
 st.title("🇫🇷 AdminSearch")
 st.caption(
-    "Agent IA · Aides & Subventions Françaises · Recherche web en temps réel · "
-    f"Profil : {statut} · {localisation}"
+    "Expert IA · Aides & Subventions 2024-2026 · "
+    f"{statut} · {localisation}"
+    + (" · 📄 PDF chargé" if st.session_state.get("pdf_name") else "")
 )
 
 # ── Boutons d'action rapide ───────────────────────────────────
@@ -489,130 +557,195 @@ for col, (label, query_text) in zip([col1, col2, col3], QUICK_QUERIES.items()):
 
 st.markdown("---")
 
-# ── Upload PDF ────────────────────────────────────────────────
+# ============================================================
+# PDF Upload + Intent Preview (Principe 4 — MIT CHI 2025)
+# ============================================================
+
 with st.expander("📄 Importer un PDF (formulaire ou document)", expanded=False):
     uploaded_pdf = st.file_uploader(
-        "Glissez un PDF ici — dossier de demande, formulaire de subvention, appel à projets…",
+        "Glissez un PDF — formulaire de subvention, appel à projets, dossier de demande…",
         type=["pdf"],
         key="pdf_uploader",
         label_visibility="collapsed",
     )
+
     if uploaded_pdf:
-        pdf_bytes = uploaded_pdf.read()
+        pdf_bytes_raw = uploaded_pdf.read()
         name = uploaded_pdf.name
 
         # Extraction uniquement si nouveau fichier
         if st.session_state.get("pdf_name") != name:
             with st.spinner("Analyse du PDF…"):
-                pdf_text = extract_pdf_text(pdf_bytes)
-                pdf_fields = detect_pdf_fields(pdf_bytes)
-            st.session_state.pdf_bytes = pdf_bytes
-            st.session_state.pdf_text = pdf_text
-            st.session_state.pdf_fields = pdf_fields
+                _txt = extract_pdf_text(pdf_bytes_raw)
+                _flds = detect_pdf_fields(pdf_bytes_raw)
+            st.session_state.pdf_bytes = pdf_bytes_raw
+            st.session_state.pdf_text = _txt
+            st.session_state.pdf_fields = _flds
             st.session_state.pdf_name = name
             st.session_state.filled_pdf_bytes = None
+            st.session_state.pdf_preview_vals = None
 
-        pdf_text = st.session_state.get("pdf_text", "")
-        pdf_fields = st.session_state.get("pdf_fields", {})
+        pdf_text_doc = st.session_state.get("pdf_text", "")
+        pdf_fields_doc = st.session_state.get("pdf_fields", {})
 
+        # Infos fichier
         col_info, col_btn = st.columns([3, 2])
         with col_info:
-            nb_pages = pdf_text.count("[Page ") or 1
+            nb_pages = pdf_text_doc.count("[Page ") or 1
             st.success(
                 f"**{name}** · {nb_pages} page(s)"
-                + (f" · **{len(pdf_fields)} champ(s) détecté(s)**" if pdf_fields else " · Document texte")
+                + (
+                    f" · **{len(pdf_fields_doc)} champ(s) détecté(s)**"
+                    if pdf_fields_doc
+                    else " · Document texte"
+                )
             )
 
-        if pdf_fields and api_key:
+        # Bouton remplissage (désactivé en mode Conseiller)
+        if pdf_fields_doc and api_key and "Conseiller" not in agent_mode:
             with col_btn:
-                if st.button("Remplir automatiquement avec mon profil", type="primary", use_container_width=True):
-                    with st.spinner("L'IA remplit votre formulaire…"):
+                if st.button(
+                    "Remplir avec mon profil",
+                    type="primary",
+                    use_container_width=True,
+                ):
+                    with st.spinner("L'IA analyse les champs…"):
                         fill_vals = ai_fill_fields(
-                            pdf_fields, profil,
+                            pdf_fields_doc, profil,
                             st.session_state.get("pdf_text", ""),
                             api_key,
                         )
+                    if "Autonome" in agent_mode:
+                        # Remplissage direct (mode autonome)
                         filled = fill_pdf(st.session_state.pdf_bytes, fill_vals)
                         st.session_state.filled_pdf_bytes = filled
-                        if fill_vals:
-                            st.success(f"{len(fill_vals)} champ(s) rempli(s) par l'IA")
+                        st.session_state.pdf_preview_vals = fill_vals
+                    else:
+                        # Mode Assistant : Intent Preview avant remplissage
+                        st.session_state.pdf_preview_vals = fill_vals
 
+        # ── Intent Preview — Principe 4 (MIT CHI 2025 / Agentic UX) ──
+        preview_vals = st.session_state.get("pdf_preview_vals")
+        if (
+            preview_vals
+            and not st.session_state.get("filled_pdf_bytes")
+            and "Autonome" not in agent_mode
+        ):
+            st.subheader("Valeurs proposées — vérifiez avant de générer")
+            st.caption(
+                "🟡 L'IA peut se tromper. Corrigez les champs si nécessaire avant de confirmer."
+            )
+            edited_vals = {}
+            cols_fields = st.columns(2)
+            for i, (field_name, proposed) in enumerate(preview_vals.items()):
+                with cols_fields[i % 2]:
+                    edited_vals[field_name] = st.text_input(
+                        field_name,
+                        value=str(proposed),
+                        key=f"field_{field_name}",
+                    )
+            if st.button(
+                "✅ Confirmer et générer le PDF rempli",
+                type="primary",
+                use_container_width=True,
+            ):
+                filled = fill_pdf(st.session_state.pdf_bytes, edited_vals)
+                st.session_state.filled_pdf_bytes = filled
+                st.rerun()
+
+        # Audit log mode Autonome
+        if "Autonome" in agent_mode and st.session_state.get("pdf_preview_vals"):
+            with st.expander("📋 Audit — valeurs utilisées par l'IA", expanded=False):
+                st.json(st.session_state.pdf_preview_vals)
+
+        # Téléchargement
         if st.session_state.get("filled_pdf_bytes"):
             st.download_button(
-                label="Télécharger le PDF rempli",
+                label="⬇️ Télécharger le PDF rempli",
                 data=st.session_state.filled_pdf_bytes,
                 file_name=f"rempli_{st.session_state.get('pdf_name', 'formulaire.pdf')}",
                 mime="application/pdf",
                 use_container_width=True,
             )
 
-        if not pdf_fields and pdf_text:
-            st.caption("Ce PDF n'a pas de champs éditables — son contenu est disponible dans le chat.")
+        if not pdf_fields_doc and pdf_text_doc:
+            st.caption(
+                "Ce PDF n'a pas de champs éditables — "
+                "son contenu est disponible comme contexte dans le chat."
+            )
 
 st.markdown("---")
 
-# ── Historique de conversation ────────────────────────────────
+# ============================================================
+# Historique de conversation
+# ============================================================
+
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Message de bienvenue si conversation vide
+# Message de bienvenue — Principe 5 (NNGroup : mental model précis)
 if not st.session_state.messages:
     with st.chat_message("assistant"):
         st.markdown(
-            "Bonjour ! 👋 Je suis **AdminSearch**, votre agent spécialisé dans les "
-            "**aides et subventions françaises** pour entrepreneurs et startups numériques.\n\n"
-            "**Comment ça marche :**\n"
-            "1. Renseignez votre profil dans la barre latérale ←\n"
-            "2. Entrez votre clé API Groq (console.groq.com — gratuit)\n"
-            "3. Importez un PDF ou cliquez sur un bouton\n\n"
-            "Je recherche en temps réel sur tous les sites officiels (Bpifrance, "
-            "Région Occitanie, aides-entreprises.fr...) et vous donne les informations "
-            "actualisées avec montants, critères, délais et démarches.\n\n"
-            f"*Profil actuel : {statut} · {localisation} · {secteur}*"
+            "Bonjour ! Je suis **AdminSearch**, votre expert en aides et subventions françaises.\n\n"
+            "**Ce que je fais :**\n"
+            "- Connaissance approfondie des dispositifs 2024-2026 "
+            "(ACRE, Bpifrance, Occitanie, Europe…)\n"
+            "- Enrichissement en temps réel via data.gouv.fr quand disponible\n"
+            "- Analyse de vos PDF et aide au remplissage de formulaires\n"
+            "- Signalement de confiance sur chaque information : "
+            "🟢 Confirmé · 🟡 À vérifier · ⚪ Non vérifié\n\n"
+            "**Important :** Vérifiez toujours les montants et délais exacts sur les sites "
+            "officiels avant de soumettre un dossier — les dispositifs évoluent régulièrement.\n\n"
+            f"*Profil : {statut} · {localisation} · {secteur}*"
         )
 
-# Afficher l'historique
-for msg in st.session_state.messages:
+# Affichage de l'historique avec feedback (Principe 8)
+for i, msg in enumerate(st.session_state.messages):
     with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
+        if msg["role"] == "assistant":
+            render_response_with_trust(msg["content"], key_prefix=f"hist_{i}")
+        else:
+            st.markdown(msg["content"])
 
 # ── Input utilisateur ─────────────────────────────────────────
 user_input = st.chat_input(
-    "Posez votre question (aides, concours, dossiers, statut juridique...)"
+    "Posez votre question (aides, concours, PDF, statut juridique…)"
 )
 
 query = query_from_button or user_input
 
-# ── Traitement de la requête ──────────────────────────────────
+# ============================================================
+# Traitement de la requête
+# ============================================================
+
 if query:
     if not api_key:
         st.error(
-            "⚠️ Ajoutez votre clé API Groq dans la barre latérale pour utiliser l'agent.\n\n"
-            "→ Obtenez une clé gratuite sur [console.groq.com](https://console.groq.com/)"
+            "⚠️ Ajoutez votre clé API Groq dans la barre latérale.\n\n"
+            "→ Gratuit sur [console.groq.com](https://console.groq.com/)"
         )
         st.stop()
 
-    # Créer la conversation Supabase au premier message
     if db and "conversation_id" not in st.session_state:
         st.session_state.conversation_id = _new_conversation(db, profil)
 
-    # Afficher et sauvegarder le message utilisateur
     with st.chat_message("user"):
         st.markdown(query)
     st.session_state.messages.append({"role": "user", "content": query})
     _save_msg(db, st.session_state.get("conversation_id", ""), "user", query)
 
-    # ── Enrichissement MCPdatagouv ────────────────────────────
+    # ── Stage 1 : MCP data.gouv.fr — Principe 2 (status progression) ──
     datagouv_ctx = ""
     if _MCP_OK:
-        with st.spinner("📡 Consultation data.gouv.fr (données officielles)..."):
+        with st.spinner("📡 Consultation data.gouv.fr…"):
             datagouv_ctx = enrich_with_datagouv(
                 f"aides entreprises subventions {query[:80]}"
             )
         if datagouv_ctx:
             st.caption("✅ Données officielles data.gouv.fr intégrées")
 
-    # ── Contexte PDF (si un document est chargé) ──────────────
+    # Contexte PDF
     pdf_ctx = ""
     pdf_text_loaded = st.session_state.get("pdf_text", "")
     pdf_name_loaded = st.session_state.get("pdf_name", "")
@@ -620,10 +753,9 @@ if query:
         pdf_ctx = (
             f"\n\n## DOCUMENT PDF CHARGÉ : {pdf_name_loaded}\n"
             f"{pdf_text_loaded[:6000]}\n"
-            "(Réponds aux questions en te basant sur ce document.)"
+            "(Tiens compte de ce document dans ta réponse.)"
         )
 
-    # ── Appel LLM (streaming) ─────────────────────────────────
     api_messages = [
         {"role": "system", "content": get_system_prompt(profil, datagouv_ctx + pdf_ctx)},
         *[
@@ -640,10 +772,10 @@ if query:
     with st.chat_message("assistant"):
         status_area = st.empty()
         text_area = st.empty()
-
         full_text = ""
-        searching = True
-        status_area.caption("🔍 Recherche web en cours...")
+
+        # ── Stage 2 : LLM thinking ────────────────────────────
+        status_area.caption("🧠 Analyse de votre profil et recherche des aides…")
 
         try:
             stream = client.chat.completions.create(
@@ -652,30 +784,33 @@ if query:
                 stream=True,
             )
 
+            # ── Stage 3 : streaming réponse ───────────────────
+            streaming_started = False
             for chunk in stream:
                 if not chunk.choices:
                     continue
-                delta_content = chunk.choices[0].delta.content
-                if delta_content:
-                    if searching:
+                delta = chunk.choices[0].delta.content
+                if delta:
+                    if not streaming_started:
                         status_area.empty()
-                        searching = False
-                    full_text += delta_content
+                        streaming_started = True
+                    full_text += delta
                     text_area.markdown(full_text + "▌")
 
         except Exception as e:
             status_area.empty()
             st.error(f"**Erreur API Groq :** {e}")
             st.info(
-                "Vérifiez que votre clé API Groq est correcte. "
+                "Vérifiez votre clé API. "
                 "→ [console.groq.com](https://console.groq.com/)"
             )
 
-        # Affichage final propre (sans curseur clignotant)
+        # Rendu final avec signaux de confiance
         status_area.empty()
-        text_area.markdown(full_text)
+        text_area.empty()
+        if full_text:
+            render_response_with_trust(full_text, key_prefix=f"new_{_profil_hash}")
 
-    # Sauvegarder la réponse
     if full_text:
         st.session_state.messages.append({"role": "assistant", "content": full_text})
         _save_msg(
