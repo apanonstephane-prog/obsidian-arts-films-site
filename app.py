@@ -34,9 +34,9 @@ except ImportError:
 def _get_default_api_key() -> str:
     """Lit la clé depuis st.secrets (Streamlit Cloud) ou l'environnement local."""
     try:
-        return st.secrets.get("OPENROUTER_API_KEY", "")
+        return st.secrets.get("GROQ_API_KEY", "")
     except Exception:
-        return os.environ.get("OPENROUTER_API_KEY", "")
+        return os.environ.get("GROQ_API_KEY", "")
 
 
 # ============================================================
@@ -325,19 +325,19 @@ with st.sidebar:
     )
 
     st.markdown("---")
-    st.header("🔑 Clé API OpenRouter")
+    st.header("🔑 Clé API Groq")
     api_key = st.text_input(
         "Clé API",
         value=_get_default_api_key(),
         type="password",
-        placeholder="sk-or-...",
-        help="Créez votre compte gratuit sur openrouter.ai",
+        placeholder="gsk_...",
+        help="Créez votre compte gratuit sur console.groq.com",
     )
 
     if not api_key:
         st.warning("⚠️ Ajoutez votre clé API pour commencer")
         st.markdown(
-            "[→ Obtenir une clé API gratuite](https://openrouter.ai/)",
+            "[→ Obtenir une clé API gratuite](https://console.groq.com/)",
             unsafe_allow_html=False,
         )
     else:
@@ -462,7 +462,7 @@ if query:
     ]
 
     client = OpenAI(
-        base_url="https://openrouter.ai/api/v1",
+        base_url="https://api.groq.com/openai/v1",
         api_key=api_key,
     )
 
@@ -476,7 +476,7 @@ if query:
 
         try:
             stream = client.chat.completions.create(
-                model="mistralai/mistral-7b-instruct:free",
+                model="llama-3.3-70b-versatile",
                 messages=api_messages,
                 stream=True,
             )
