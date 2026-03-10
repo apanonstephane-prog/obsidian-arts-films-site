@@ -7,12 +7,33 @@ Puis ouvre http://localhost:8501 dans ton navigateur
 """
 
 import os
+import io
+import json
+import re
 import asyncio
 import concurrent.futures
 import streamlit as st
 from openai import OpenAI
 from datetime import datetime
 from dotenv import load_dotenv
+
+try:
+    import pdfplumber
+    _PDF_READ_OK = True
+except ImportError:
+    _PDF_READ_OK = False
+
+try:
+    from pypdf import PdfReader
+    _PYPDF_OK = True
+except ImportError:
+    _PYPDF_OK = False
+
+try:
+    from PyPDFForm import PdfWrapper
+    _PDF_FILL_OK = True
+except ImportError:
+    _PDF_FILL_OK = False
 
 load_dotenv()
 
@@ -155,6 +176,83 @@ def enrich_with_datagouv(query: str) -> str:
     except Exception:
         pass
     return ""
+
+
+# ============================================================
+# PDF — lecture, détection de champs, remplissage IA
+# ============================================================
+
+def extract_pdf_text(pdf_bytes: bytes) -> str:
+    """Extrait le texte d'un PDF avec pdfplumber."""
+    if not _PDF_READ_OK:
+        return ""
+    try:
+        with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
+            pages_text = []
+            for i, page in enumerate(pdf.pages):
+                text = page.extract_text() or ""
+                if text.strip():
+                    pages_text.append(f"[Page {i+1}]\n{text}")
+            return "\n\n".join(pages_text)
+    except Exception:
+        return ""
+
+
+def detect_pdf_fields(pdf_bytes: bytes) -> dict:
+    """Détecte les champs d'un formulaire PDF avec pypdf."""
+    if not _PYPDF_OK:
+        return {}
+    try:
+        reader = PdfReader(io.BytesIO(pdf_bytes))
+        fields = reader.get_fields()
+        if not fields:
+            return {}
+        return {
+            name: (field.value or "") for name, field in fields.items()
+        }
+    except Exception:
+        return {}
+
+
+def ai_fill_fields(fields: dict, profil: dict, pdf_text: str, api_key: str) -> dict:
+    """Demande à l'IA de générer les valeurs pour chaque champ du formulaire."""
+    champs_list = json.dumps(list(fields.keys()), ensure_ascii=False, indent=2)
+    prompt = (
+        "Tu es un expert en dossiers de subventions et aides françaises.\n\n"
+        f"Profil de l'entrepreneur :\n{json.dumps(profil, ensure_ascii=False, indent=2)}\n\n"
+        f"Contenu du formulaire PDF (extrait) :\n{pdf_text[:4000]}\n\n"
+        f"Champs à remplir :\n{champs_list}\n\n"
+        "Génère les valeurs adaptées pour chaque champ selon le profil. "
+        "Réponds UNIQUEMENT avec un objet JSON valide, sans commentaires ni markdown. "
+        "Exemple : {\"nom\": \"Dupont\", \"activite\": \"Développement web\"}"
+    )
+    try:
+        client = OpenAI(base_url="https://api.groq.com/openai/v1", api_key=api_key)
+        resp = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": prompt}],
+            stream=False,
+        )
+        raw = resp.choices[0].message.content or ""
+        match = re.search(r"\{.*\}", raw, re.DOTALL)
+        if match:
+            return json.loads(match.group())
+    except Exception:
+        pass
+    return {}
+
+
+def fill_pdf(pdf_bytes: bytes, fill_values: dict) -> bytes | None:
+    """Remplit les champs du formulaire PDF et retourne les bytes du PDF rempli."""
+    if not _PDF_FILL_OK or not fill_values:
+        return None
+    try:
+        filled = PdfWrapper(io.BytesIO(pdf_bytes)).fill(fill_values)
+        buf = io.BytesIO()
+        filled.write(buf)
+        return buf.getvalue()
+    except Exception:
+        return None
 
 
 # ============================================================
@@ -391,6 +489,68 @@ for col, (label, query_text) in zip([col1, col2, col3], QUICK_QUERIES.items()):
 
 st.markdown("---")
 
+# ── Upload PDF ────────────────────────────────────────────────
+with st.expander("📄 Importer un PDF (formulaire ou document)", expanded=False):
+    uploaded_pdf = st.file_uploader(
+        "Glissez un PDF ici — dossier de demande, formulaire de subvention, appel à projets…",
+        type=["pdf"],
+        key="pdf_uploader",
+        label_visibility="collapsed",
+    )
+    if uploaded_pdf:
+        pdf_bytes = uploaded_pdf.read()
+        name = uploaded_pdf.name
+
+        # Extraction uniquement si nouveau fichier
+        if st.session_state.get("pdf_name") != name:
+            with st.spinner("Analyse du PDF…"):
+                pdf_text = extract_pdf_text(pdf_bytes)
+                pdf_fields = detect_pdf_fields(pdf_bytes)
+            st.session_state.pdf_bytes = pdf_bytes
+            st.session_state.pdf_text = pdf_text
+            st.session_state.pdf_fields = pdf_fields
+            st.session_state.pdf_name = name
+            st.session_state.filled_pdf_bytes = None
+
+        pdf_text = st.session_state.get("pdf_text", "")
+        pdf_fields = st.session_state.get("pdf_fields", {})
+
+        col_info, col_btn = st.columns([3, 2])
+        with col_info:
+            nb_pages = pdf_text.count("[Page ") or 1
+            st.success(
+                f"**{name}** · {nb_pages} page(s)"
+                + (f" · **{len(pdf_fields)} champ(s) détecté(s)**" if pdf_fields else " · Document texte")
+            )
+
+        if pdf_fields and api_key:
+            with col_btn:
+                if st.button("Remplir automatiquement avec mon profil", type="primary", use_container_width=True):
+                    with st.spinner("L'IA remplit votre formulaire…"):
+                        fill_vals = ai_fill_fields(
+                            pdf_fields, profil,
+                            st.session_state.get("pdf_text", ""),
+                            api_key,
+                        )
+                        filled = fill_pdf(st.session_state.pdf_bytes, fill_vals)
+                        st.session_state.filled_pdf_bytes = filled
+                        if fill_vals:
+                            st.success(f"{len(fill_vals)} champ(s) rempli(s) par l'IA")
+
+        if st.session_state.get("filled_pdf_bytes"):
+            st.download_button(
+                label="Télécharger le PDF rempli",
+                data=st.session_state.filled_pdf_bytes,
+                file_name=f"rempli_{st.session_state.get('pdf_name', 'formulaire.pdf')}",
+                mime="application/pdf",
+                use_container_width=True,
+            )
+
+        if not pdf_fields and pdf_text:
+            st.caption("Ce PDF n'a pas de champs éditables — son contenu est disponible dans le chat.")
+
+st.markdown("---")
+
 # ── Historique de conversation ────────────────────────────────
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -403,8 +563,8 @@ if not st.session_state.messages:
             "**aides et subventions françaises** pour entrepreneurs et startups numériques.\n\n"
             "**Comment ça marche :**\n"
             "1. Renseignez votre profil dans la barre latérale ←\n"
-            "2. Entrez votre clé API OpenRouter (openrouter.ai — gratuit)\n"
-            "3. Cliquez sur un bouton ou posez votre question\n\n"
+            "2. Entrez votre clé API Groq (console.groq.com — gratuit)\n"
+            "3. Importez un PDF ou cliquez sur un bouton\n\n"
             "Je recherche en temps réel sur tous les sites officiels (Bpifrance, "
             "Région Occitanie, aides-entreprises.fr...) et vous donne les informations "
             "actualisées avec montants, critères, délais et démarches.\n\n"
@@ -427,8 +587,8 @@ query = query_from_button or user_input
 if query:
     if not api_key:
         st.error(
-            "⚠️ Ajoutez votre clé API OpenRouter dans la barre latérale pour utiliser l'agent.\n\n"
-            "→ Obtenez une clé gratuite sur [openrouter.ai](https://openrouter.ai/)"
+            "⚠️ Ajoutez votre clé API Groq dans la barre latérale pour utiliser l'agent.\n\n"
+            "→ Obtenez une clé gratuite sur [console.groq.com](https://console.groq.com/)"
         )
         st.stop()
 
@@ -452,9 +612,20 @@ if query:
         if datagouv_ctx:
             st.caption("✅ Données officielles data.gouv.fr intégrées")
 
+    # ── Contexte PDF (si un document est chargé) ──────────────
+    pdf_ctx = ""
+    pdf_text_loaded = st.session_state.get("pdf_text", "")
+    pdf_name_loaded = st.session_state.get("pdf_name", "")
+    if pdf_text_loaded:
+        pdf_ctx = (
+            f"\n\n## DOCUMENT PDF CHARGÉ : {pdf_name_loaded}\n"
+            f"{pdf_text_loaded[:6000]}\n"
+            "(Réponds aux questions en te basant sur ce document.)"
+        )
+
     # ── Appel LLM (streaming) ─────────────────────────────────
     api_messages = [
-        {"role": "system", "content": get_system_prompt(profil, datagouv_ctx)},
+        {"role": "system", "content": get_system_prompt(profil, datagouv_ctx + pdf_ctx)},
         *[
             {"role": m["role"], "content": m["content"]}
             for m in st.session_state.messages
@@ -494,10 +665,10 @@ if query:
 
         except Exception as e:
             status_area.empty()
-            st.error(f"**Erreur API OpenRouter :** {e}")
+            st.error(f"**Erreur API Groq :** {e}")
             st.info(
-                "Vérifiez que votre clé API est correcte et que vous avez du crédit "
-                "ou utilisez un modèle gratuit. → [openrouter.ai](https://openrouter.ai/)"
+                "Vérifiez que votre clé API Groq est correcte. "
+                "→ [console.groq.com](https://console.groq.com/)"
             )
 
         # Affichage final propre (sans curseur clignotant)
