@@ -5,6 +5,7 @@
   "installCommand": "npm install",
   "outputDirectory": ".next",
   "regions": ["cdg1"],
+  "name": "money-paper-search",
   "env": {
     "NEXT_PUBLIC_APP_NAME": "SOTAI"
   },
